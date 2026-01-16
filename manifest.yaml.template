@@ -1,0 +1,12 @@
+name: pind
+description: A plugin for picodata
+version: {{ version }}
+services:
+  - name: search
+    description: the search engine service
+    default_configuration:
+migration:
+{% for migration in migrations -%}
+- {{ migration }}
+{% endfor -%}
+

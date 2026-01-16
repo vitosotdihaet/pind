@@ -1,0 +1,16 @@
+[tier.default]
+replicasets = 2
+replication_factor = 2
+
+[plugin.pind]
+migration_context = [
+    { name = "tier", value = "default" },
+]
+
+[plugin.pind.service.search]
+tiers = ["default"]
+
+[enviroment]
+PICODATA_HTTP_LISTEN = "127.0.0.1:{{ 8000 | plus: instance_id }}"
+PICODATA_IPROTO_LISTEN = "127.0.0.1:{{ 3000 | plus: instance_id }}"
+PICODATA_UNSAFE_DISABLE_PLUGIN_COMPATIBILITY_CHECK = "true"
