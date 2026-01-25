@@ -8,6 +8,10 @@ clean:
 down:
 	{{ env("PIKE_BINARY_PATH") }} stop
 
+config path="./configs/default.yaml":
+	{{ env("PIKE_BINARY_PATH") }} config apply \
+		--config-path={{ path }}
+
 set_admin_pass:
 	echo "alter user admin with password '{{ env("ADMIN_PASSWORD") }}'" | cargo pike enter --picodata-path={{ env("PICODATA_BINARY_PATH") }} i1
 

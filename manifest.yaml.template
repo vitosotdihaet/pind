@@ -3,8 +3,13 @@ description: A plugin for picodata
 version: {{ version }}
 services:
   - name: search
-    description: the search engine service
+    description: the search engine service of pind
     default_configuration:
+      search:
+  - name: scrape
+    description: the web-scraper of pind
+    default_configuration:
+      sites: {}
 migration:
 {% for migration in migrations -%}
 - {{ migration }}
