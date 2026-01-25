@@ -1,0 +1,3 @@
+[submodule "diploma"]
+	path = diploma
+	url = git@github.com:vitosotdihaet/diploma.git
