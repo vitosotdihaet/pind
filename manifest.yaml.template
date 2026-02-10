@@ -1,15 +1,11 @@
 name: pind
-description: A plugin for picodata
+description: global secondary index
 version: {{ version }}
 services:
-  - name: search
-    description: the search engine service of pind
+  - name: pind
+    description: global secondary index
     default_configuration:
-      search:
-  - name: scrape
-    description: the web-scraper of pind
-    default_configuration:
-      sites: {}
+      none:
 migration:
 {% for migration in migrations -%}
 - {{ migration }}

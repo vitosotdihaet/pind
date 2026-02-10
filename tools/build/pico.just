@@ -52,3 +52,14 @@ wait_till_rebalance_is_done:
 	while (box.space._pico_tier:get{pico.whoami().tier}.bucket_count / pico.sql("select count(*) from _pico_replicaset where tier = '" .. pico.whoami().tier .. "'").rows[1][1]) ~= box.space._bucket:count() do require('fiber').sleep(0.1) end
 	EOF
 	done
+
+fill_with_some_data amount="100":
+	#!/usr/bin/env bash
+	SOCK="./tmp/cluster/i1/admin.sock"
+	sql="create table if not exists _pind_test_table (a int primary key) distributed by (a) in tier pind;"
+	for i in $(seq 1 {{ amount }}); do
+		sql="$sql insert into _pind_test_table values ($i);"
+	done
+	echo "$sql" | picodata admin "$SOCK" > /dev/null
+
+

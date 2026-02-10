@@ -3,7 +3,10 @@ cluster:
   tier:
     default:
       can_vote: true
+    pind:
+      replication_factor: 1
   default_replication_factor: 2
+  default_bucket_count: 10
 
 instance:
   log:
@@ -11,3 +14,4 @@ instance:
     format: plain
   memtx:
     memory: 67108864
+

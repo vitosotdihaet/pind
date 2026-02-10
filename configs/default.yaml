@@ -1,13 +1,1 @@
-search:
-scrape:
-  sites:
-    habr:
-      crawl_delay_sec: 10
-      get_from: "2020-01-01T00:00:00+03:00"
-      get_to: "2025-01-01T00:00:00+03:00"
-      queue_limit: 10
-    rbc:
-      crawl_delay_sec: 1
-      get_from: "2020-01-01T00:00:00+03:00"
-      get_to: "2025-01-01T00:00:00+03:00"
-      queue_limit: 100
+none:

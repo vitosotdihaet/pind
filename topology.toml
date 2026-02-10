@@ -1,25 +1,17 @@
-[tier.searcher]
+[tier.pind]
 replicasets = 1
-replication_factor = 2
-
-[tier.scraper]
-replicasets = 1
-replication_factor = 2
+replication_factor = 1
 
 [plugin.pind]
 migration_context = [
-    { name = "search_tier", value = "searcher" },
-    { name = "scrape_tier", value = "scraper" }
+    { name = "pind_tier", value = "pind" },
 ]
 
-[plugin.pind.service.search]
-tiers = ["searcher", "scraper"]
-
-[plugin.pind.service.scrape]
-tiers = ["scraper"]
+[plugin.pind.service.pind]
+tiers = ["pind"]
 
 [enviroment]
 PICODATA_HTTP_LISTEN = "127.0.0.1:{{ 8000 | plus: instance_id }}"
 PICODATA_IPROTO_LISTEN = "127.0.0.1:{{ 3000 | plus: instance_id }}"
 PICODATA_UNSAFE_DISABLE_PLUGIN_COMPATIBILITY_CHECK = "true"
-PICODATA_LOG_LEVEL = "info"
+PICODATA_LOG_LEVEL = "error"
