@@ -5,7 +5,7 @@ services:
   - name: pind
     description: global secondary index
     default_configuration:
-      none:
+      value: 123
 migration:
 {% for migration in migrations -%}
 - {{ migration }}

@@ -1,10 +1,5 @@
 use crate::index::{DistributionType, IndexIdentifier};
 
-/// Add an index entry to _pind_indexes, then become a scatter-gather manager to ensure
-/// that the index was built on every replicaset leader of the cluster.
-pub fn add_index(identifier: IndexIdentifier) -> Result<(), ()> {
-    Ok(())
-}
 pub mod in_memory {
     use std::{
         cell::LazyCell,
@@ -18,7 +13,11 @@ pub mod in_memory {
             LazyCell::new(|| HashMap::with_capacity(16));
     }
 
-    pub fn build() {}
+    /// Become a scatter-gather manager to ensure that the index was built
+    /// on every replicaset leader of the cluster.
+    pub fn add_index() {}
 
     pub fn build_on_instance() {}
 }
+
+pub mod in_table {}

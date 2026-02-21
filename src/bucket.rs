@@ -62,7 +62,7 @@ pub fn set_bucket_event_listener() {
 
                 let mut lock = bucket_clone.borrow_mut();
                 // TODO: get all indexes that are built on data.spaces and update them
-                log::error!(
+                log::debug!(
                     "got event {event:?}, at bucket_id = {bucket_id}, with data = {data:?}"
                 );
                 lock.remove(&bucket_id);
