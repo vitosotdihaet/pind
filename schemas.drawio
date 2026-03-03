@@ -319,11 +319,11 @@
     </mxGraphModel>
   </diagram>
   <diagram id="e4Y9JhAxX-wGORoT6nWn" name="context">
-    <mxGraphModel dx="1473" dy="475" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1451" dy="355" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="YXruISjmUztmE3pATQmC-2" edge="1" parent="1" source="sThK-eM3VflH9aTeAtm8-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;exitX=1;exitY=1;exitDx=0;exitDy=0;" target="sThK-eM3VflH9aTeAtm8-3" value="Построение ГВИ">
+        <mxCell id="YXruISjmUztmE3pATQmC-2" edge="1" parent="1" source="sThK-eM3VflH9aTeAtm8-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.007;entryY=0.347;entryDx=0;entryDy=0;exitX=0.978;exitY=0.351;exitDx=0;exitDy=0;entryPerimeter=0;exitPerimeter=0;" target="sThK-eM3VflH9aTeAtm8-3" value="Построение ГВИ">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="YXruISjmUztmE3pATQmC-8" edge="1" parent="1" source="sThK-eM3VflH9aTeAtm8-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.042;exitY=0.323;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" target="sThK-eM3VflH9aTeAtm8-2" value="Искомые записи">
@@ -345,8 +345,10 @@
         <mxCell id="sThK-eM3VflH9aTeAtm8-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Клиент" vertex="1">
           <mxGeometry height="100" width="120" x="20" y="550" as="geometry" />
         </mxCell>
-        <mxCell id="YXruISjmUztmE3pATQmC-9" edge="1" parent="1" source="sThK-eM3VflH9aTeAtm8-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=-0.01;exitY=0.151;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" target="sThK-eM3VflH9aTeAtm8-1" value="Настройки ГВИ">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="YXruISjmUztmE3pATQmC-9" edge="1" parent="1" source="sThK-eM3VflH9aTeAtm8-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=-0.01;exitY=0.151;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" target="sThK-eM3VflH9aTeAtm8-1" value="Добавление ГВИ">
+          <mxGeometry relative="1" x="-0.0016" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="sThK-eM3VflH9aTeAtm8-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Администратор СУБД" vertex="1">
           <mxGeometry height="100" width="120" x="560" y="550" as="geometry" />
@@ -357,6 +359,9 @@
             <mxPoint x="405.68000000000006" y="639" as="sourcePoint" />
             <mxPoint x="180.00000000000003" y="629.9999999999999" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="XMwjiiFp9gwnreSNrOof-1" edge="1" parent="1" source="sThK-eM3VflH9aTeAtm8-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.93;entryY=0.797;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0;exitY=0.75;exitDx=0;exitDy=0;startArrow=classic;startFill=1;" target="sThK-eM3VflH9aTeAtm8-1" value="Удаление ГВИ">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
