@@ -1,4 +1,4 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.5.2 Safari/537.36" version="29.6.1" pages="17">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.8.9 Safari/537.36" version="29.6.1" pages="17">
   <diagram name="er" id="KMFfWRNqj3kEJCSi6mVX">
     <mxGraphModel dx="2102" dy="1094" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="0" pageScale="1" pageWidth="4681" pageHeight="3300" background="none" math="0" shadow="0">
       <root>
@@ -18,7 +18,7 @@
         <mxCell id="lDLgMlZLXo7J5arVThAR-52" edge="1" parent="1" source="Hqh33RNKZ5_rLXfGQ1_B-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;fontSize=14;" target="lDLgMlZLXo7J5arVThAR-51" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Hqh33RNKZ5_rLXfGQ1_B-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="Репликасет" vertex="1">
+        <mxCell id="Hqh33RNKZ5_rLXfGQ1_B-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="Набор реплик" vertex="1">
           <mxGeometry height="60" width="100" x="895" y="370" as="geometry" />
         </mxCell>
         <mxCell id="Hqh33RNKZ5_rLXfGQ1_B-5" edge="1" parent="1" source="Hqh33RNKZ5_rLXfGQ1_B-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;fontSize=14;" target="Hqh33RNKZ5_rLXfGQ1_B-2" value="&lt;div&gt;N&lt;/div&gt;">
@@ -51,7 +51,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="Hqh33RNKZ5_rLXfGQ1_B-18" parent="1" style="whiteSpace=wrap;html=1;rounded=0;fontSize=14;" value="Инстанс" vertex="1">
+        <mxCell id="Hqh33RNKZ5_rLXfGQ1_B-18" parent="1" style="whiteSpace=wrap;html=1;rounded=0;fontSize=14;" value="Узел" vertex="1">
           <mxGeometry height="60" width="120" x="885" y="570" as="geometry" />
         </mxCell>
         <mxCell id="Hqh33RNKZ5_rLXfGQ1_B-20" parent="1" style="ellipse;whiteSpace=wrap;html=1;rounded=0;fontSize=14;" value="&lt;div&gt;Является&lt;/div&gt;&lt;div&gt;мастером&lt;/div&gt;" vertex="1">
