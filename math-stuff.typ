@@ -50,15 +50,16 @@
 #let intensity_update = $lambda_"update"$
 
 // LSI SEARCH
-#let subintensity_search = intensity_search
+#let subintensity_search_LSI = intensity_search
 
 #let load_executor_search_LSI = $rho^"executor"_"search,LSI"$
+#let max_subintensity_search_LSI = $lambda_"search"^"max"$
 
-#let search_btree_node_jumps = $log_#btree_order #data_cardinality_per_replicaset$
-#let search_btree_leaf_jumps = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
-#let search_btree_jumps_total = $#search_btree_node_jumps + 3 dot (#pk_per_fk_cardinality_per_replicaset - 1) / (4m - 2) + 1$
-#let search_btree_search_ops_node = $log_2 (2#btree_order - 1)$
-#let search_btree_search_ops_total = $#search_btree_node_jumps dot #search_btree_search_ops_node$
+#let btree_node_jumps_search_LSI = $log_#btree_order #data_cardinality_per_replicaset$
+#let btree_leaf_jumps_search_LSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
+#let btree_jumps_total_search_LSI = $#btree_node_jumps_search_LSI + 3 dot (#pk_per_fk_cardinality_per_replicaset - 1) / (4m - 2) + 1$
+#let btree_search_ops_node_search_LSI = $log_2 (2#btree_order - 1)$
+#let btree_search_ops_total_search_LSI = $#btree_node_jumps_search_LSI dot #btree_search_ops_node_search_LSI$
 
 #let time_user_search_LSI = $T^"user"_"search,LSI"$
 #let time_coordinate_search_LSI = $T^"coordinate"_"search,LSI"$
@@ -75,21 +76,19 @@
 
 #let random_part_of_tcsi = $Y$
 #let deterministic_part_of_tcsi = $C^"coordinate"$
-
 #let random_part_of_tss = $V$
-
 #let random_part_of_tcs = $Z$
 
 // LSI UPDATE
-#let time_execute_update = $T^" execute"_"update"$
-#let time_service_update = $T^" service"_"update"$
-#let load_update = $rho_"update"$
+#let time_execute_update_LSI = $T^" execute"_"update,LSI"$
+#let time_service_update_LSI = $T^" service"_"update,LSI"$
+#let load_update_LSI = $rho_"update,LSI"$
 
-#let update_btree_node_jumps = search_btree_node_jumps
-#let update_btree_node_search_ops = search_btree_search_ops_total
-#let update_btree_node_split_probability_value = $0.19$
-#let update_btree_free_space_before_overflow_long = $(#btree_max_keys)#update_btree_node_split_probability_value$
-#let update_btree_free_space_before_overflow_inv = $5.26 / #btree_max_keys$
+#let btree_node_jumps_update_LSI = btree_node_jumps_search_LSI
+#let btree_node_search_ops_update_LSI = btree_search_ops_total_search_LSI
+#let btree_node_split_probability_value_update_LSI = $0.19$
+#let btree_free_space_before_overflow_long_update_LSI = $(#btree_max_keys)#btree_node_split_probability_value_update_LSI$
+#let btree_free_space_before_overflow_inv_update_LSI = $5.26 / #btree_max_keys$
 
 
 // GSI SEARCH
