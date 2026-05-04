@@ -1,11 +1,9 @@
-
 // define variable names
 #let iter_i = $i = overline(1..N)$
 
 // math model parameters
 #let replicaset_count = $N$
 #let data_cardinality = $D$
-#let search_data_cardinality = $S$
 #let row_size = $r$
 #let fk_cardinality = $K$
 #let pk_per_fk_cardinality_per_replicaset = $s$
@@ -43,17 +41,20 @@
 #let service_time_coordinate = $W^"coordinate"$
 
 #let result_size = $R$
-#let request_size = $Q$
+#let query_size = $Q$
 #let exec_plan_size = $P$
 
 #let intensity_search = $lambda_"search"$
 #let intensity_update = $lambda_"update"$
 
 // LSI SEARCH
-#let subintensity_search_LSI = intensity_search
+// SMO
+#let intensity_search_LSI = $lambda_"search,LSI"$
+#let subintensity_search_LSI = $lambda_"search,LSI"$
 
 #let load_executor_search_LSI = $rho^"executor"_"search,LSI"$
-#let max_subintensity_search_LSI = $lambda_"search"^"max"$
+#let max_subintensity_search_LSI = $lambda_"search,LSI"^"max"$
+#let queue_time_total_LSI = $W^"total"_"search,q,LSI"$
 
 #let btree_node_jumps_search_LSI = $log_#btree_order #data_cardinality_per_replicaset$
 #let btree_leaf_jumps_search_LSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
@@ -78,6 +79,9 @@
 #let deterministic_part_of_tcsi = $C^"coordinate"$
 #let random_part_of_tss = $V$
 #let random_part_of_tcs = $Z$
+#let deterministic_part_of_tus = $C^"user"$
+// some calculations
+#let net_reqs_search_LSI_name = $"NR"^"LSI"_"search"$
 
 // LSI UPDATE
 #let time_execute_update_LSI = $T^" execute"_"update,LSI"$
@@ -95,19 +99,3 @@
 
 // GSI UPDATE
 #let time_user_update_GSI = $T^"user"_"update,GSI"$
-
-
-// Theorem helpers
-#import "@preview/lemmify:0.1.8": *
-
-#let (
-  theorem,
-  lemma,
-  corollary,
-  remark,
-  proposition,
-  example,
-  proof,
-  rules: thm-rules,
-) = default-theorems("all", lang: "ru")
-#show: thm-rules
