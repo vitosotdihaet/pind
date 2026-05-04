@@ -794,7 +794,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="mINLHucpSDKM70rCEeXi" name="gsi-search-seq">
-    <mxGraphModel dx="1851" dy="755" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="4681" pageHeight="3300" math="0" shadow="0">
+    <mxGraphModel dx="1101" dy="365" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="4681" pageHeight="3300" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -913,8 +913,8 @@
         <mxCell id="x-9Q3KVh7Fu1zq9nIRRm-1" parent="x-9Q3KVh7Fu1zq9nIRRm-3" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;fontSize=10;width=70;height=35;" value="асинхронный&lt;div&gt;цикл&lt;/div&gt;" vertex="1">
           <mxGeometry height="90" width="380" x="-10" as="geometry" />
         </mxCell>
-        <mxCell id="x-9Q3KVh7Fu1zq9nIRRm-2" parent="x-9Q3KVh7Fu1zq9nIRRm-3" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="[по i от 1 до N]" vertex="1">
-          <mxGeometry height="38.57142857142858" width="65.29411764705881" x="1.088235294117647" y="45" as="geometry" />
+        <mxCell id="x-9Q3KVh7Fu1zq9nIRRm-2" parent="x-9Q3KVh7Fu1zq9nIRRm-3" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="[по i от 1 до k]" vertex="1">
+          <mxGeometry height="38.57" width="66.38" x="-10" y="45" as="geometry" />
         </mxCell>
         <mxCell id="QcYtwkM8lgEo2i0eW9AD-24" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};participant=umlActor;size=40;" value="" vertex="1">
           <mxGeometry height="413.83" width="20" x="-280" y="336.17" as="geometry" />
