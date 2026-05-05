@@ -696,12 +696,13 @@ $ #net_reqs_search_LSI_name = 2 N + 2. $ <lsi-search-net-reqs>
 
 Заметим, что каждая заявка на поиск порождает $#replicaset_count$ заявок исполнителям, причем интенсивность потока исполнителя так же равна $#subintensity_search_LSI$. Интенсивность потока во всем кластере суммарно равна $#intensity_search_LSI (#replicaset_count + 1)$, так как для обработки одной заявки координатором, нужно прождать очередь в координаторе, потом $#replicaset_count$ очередей на каждом исполнителе.
 
-// TODO: вставить план исполнения при поиске по одному первичному ключу весит 147 байтов (метадата запроса) плюс размер ключа поиска
+// TODO: план исполнения при поиске по одному первичному ключу весит 147 байтов (метадата запроса) плюс размер ключа поиска
 
 Все параметры, необходимые для расчета, кроме времени ожидания обработки подзадачи исполнителем $#service_time_execute_search_LSI$ и времени ожидания в очереди исполнителя $#queue_time_execute_search_LSI$ известны. Для нахождения обеих величин необходимо вычислить время обработки заявки исполнителем $#time_execute_search_LSI$.
 
 Чтобы не усложнять расчеты случайностью всех процессов поиска в B+\*-дереве, будет рассматрен худший случай поиска. Так что $#time_coordinate_search_LSI$ --- это скалярная величина.
 
+// УЛУЧШЕНИЕ: рассмотреть вероятностную модель дерева
 
 На каждом исполнителе хранится по $#data_cardinality_per_replicaset = #data_cardinality/#replicaset_count$ записей, так что поиск первой записи по вторичному ключу в B+\*-дереве требует #btree_node_jumps_search_LSI операций перехода по указателям и #btree_search_ops_total_search_LSI операций сравнения ключей.
 
@@ -744,17 +745,17 @@ $
   #time_coordinate_search_LSI_ith = #time_coordinate_search_LSI_ith_right_side.
 $
 
-Только времена сетевой задержки ($#cluster_request_time_ith$, $#cluster_response_time_ith$) --- случайные величины, остальные --- скалярные, так что, согласно свойствам гамма-распределения, приведенным в @kibzun2011probability, время работы координатора на одном наборе реплик --- случайная величина, имеющая сдвинутое гамма-распределение. Cлучайную часть $#time_coordinate_search_LSI_ith$ обозначим  $#random_part_of_tcsi_LSI$, а детерминированную --- $#deterministic_part_of_tcsi_LSI$:
+Только времена сетевой задержки ($#cluster_request_time_ith$, $#cluster_response_time_ith$) --- случайные величины, остальные --- скалярные, так что, согласно свойствам гамма-распределения, приведенным в @kibzun2011probability, время работы координатора на одном наборе реплик --- случайная величина, имеющая сдвинутое гамма-распределение. Cлучайную часть $#time_coordinate_search_LSI_ith$ обозначим  $#random_part_of_tcsi_search_LSI$, а детерминированную --- $#deterministic_part_of_tcsi_search_LSI$:
 $
-  #deterministic_part_of_tcsi_LSI = #service_time_execute_search_LSI + (#exec_plan_size + #pk_per_fk_cardinality_per_replicaset #row_size)/ #cluster_net_speed,
+  #deterministic_part_of_tcsi_search_LSI = #service_time_execute_search_LSI + (#exec_plan_size + #pk_per_fk_cardinality_per_replicaset #row_size)/ #cluster_net_speed,
 $
 $
-  #random_part_of_tcsi_LSI = #time_coordinate_search_LSI_ith - #deterministic_part_of_tcsi_LSI tilde Gamma(2#cluster_time_k, #cluster_time_theta).
+  #random_part_of_tcsi_search_LSI = #time_coordinate_search_LSI_ith - #deterministic_part_of_tcsi_search_LSI tilde Gamma(2#cluster_time_k, #cluster_time_theta).
 $
 
 Следовательно функция распределения равна:
 $
-  F_#random_part_of_tcsi_LSI (t) = P(#random_part_of_tcsi_LSI <= t) = gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k).
+  F_#random_part_of_tcsi_search_LSI (t) = P(#random_part_of_tcsi_search_LSI <= t) = gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k).
 $
 
 Согласно формуле (@time-coordinate-search-LSI), время работы координатора равно:
@@ -762,31 +763,31 @@ $
   #time_coordinate_search_LSI = max_(#iter_i) #time_coordinate_search_LSI_ith,
 $
 #aftermath([
-  случайную часть $#time_coordinate_search_LSI$ обозначим $#random_part_of_tcs_LSI$, максимум среди одинаковых неслучайных величин $#deterministic_part_of_tcsi_LSI$ равен самому себе:
+  случайную часть $#time_coordinate_search_LSI$ обозначим $#random_part_of_tcs_search_LSI$, максимум среди одинаковых неслучайных величин $#deterministic_part_of_tcsi_search_LSI$ равен самому себе:
 ])
 $
-  #random_part_of_tcs_LSI = #time_coordinate_search_LSI - #deterministic_part_of_tcsi_LSI
+  #random_part_of_tcs_search_LSI = #time_coordinate_search_LSI - #deterministic_part_of_tcsi_search_LSI
 $
 #aftermath([
-  значит, функция распределения $#random_part_of_tcs_LSI$ равна:
+  значит, функция распределения $#random_part_of_tcs_search_LSI$ равна:
 ])
 $
-  F_#random_part_of_tcs_LSI (t) = [F_#random_part_of_tcsi_LSI (t)]^N = [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N,
+  F_#random_part_of_tcs_search_LSI (t) = [F_#random_part_of_tcsi_search_LSI (t)]^N = [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N,
 $
 #aftermath([
   что позволяет нам численно найти моменты $#time_coordinate_search_LSI$ через функцию выживания @ross2019first:
 ])
 $
-  M[#random_part_of_tcs_LSI] = integral_0^infinity (1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t,
+  M[#random_part_of_tcs_search_LSI] = integral_0^infinity (1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t,
 $
 $
-  M[#random_part_of_tcs_LSI^2] = integral_0^infinity 2t(1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t,
+  M[#random_part_of_tcs_search_LSI^2] = integral_0^infinity 2t(1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t,
 $
 $
-  M[#time_coordinate_search_LSI] = M[#random_part_of_tcs_LSI] + #deterministic_part_of_tcsi_LSI,
+  M[#time_coordinate_search_LSI] = M[#random_part_of_tcs_search_LSI] + #deterministic_part_of_tcsi_search_LSI,
 $
 $
-  D[#time_coordinate_search_LSI] = D[#random_part_of_tcs_LSI] = M[#random_part_of_tcs_LSI^2] - (M[#random_part_of_tcs_LSI])^2.
+  D[#time_coordinate_search_LSI] = D[#random_part_of_tcs_search_LSI] = M[#random_part_of_tcs_search_LSI^2] - (M[#random_part_of_tcs_search_LSI])^2.
 $
 
 В свою очередь:
@@ -797,19 +798,19 @@ $
   D[#service_time_coordinate_search_LSI] = D[#time_coordinate_search_LSI]
 $
 
-Время задержек в $#time_user_search_LSI$, обозначим за $#random_part_of_tss_LSI$, тогда:
+Время задержек в $#time_user_search_LSI$, обозначим за $#random_part_of_tss_search_LSI$, тогда:
 $
-  #random_part_of_tss_LSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
+  #random_part_of_tss_search_LSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
 $
 #aftermath([
   из чего можно найти математическое ожидание и дисперсию времени ожидания пользователя:
 ])
 $
-  M[#time_user_search_LSI] = M[#random_part_of_tss_LSI] + M[#service_time_coordinate_search_LSI] + (#pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed = \
+  M[#time_user_search_LSI] = M[#random_part_of_tss_search_LSI] + M[#service_time_coordinate_search_LSI] + (#pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed = \
   = #user_time_k#user_time_theta + M[#service_time_coordinate_search_LSI] + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
 $
 $
-  D[#time_user_search_LSI] = D[#random_part_of_tss_LSI] + D[#service_time_coordinate_search_LSI] =\
+  D[#time_user_search_LSI] = D[#random_part_of_tss_search_LSI] + D[#service_time_coordinate_search_LSI] =\
   = #user_time_k#user_time_theta^2 + D[#service_time_coordinate_search_LSI].
 $
 
@@ -828,7 +829,7 @@ $
 
 Время ожидания пользователя $#time_user_search_LSI$ является суммой независимых случайной и детерминированной частей:
 $
-  #time_user_search_LSI = #random_part_of_tss_LSI + #service_time_coordinate_search_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
+  #time_user_search_LSI = #random_part_of_tss_search_LSI + #service_time_coordinate_search_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
 $
 #aftermath([
   где $#service_time_coordinate_search_LSI$ равна $#queue_time_execute_search_LSI + #time_coordinate_search_LSI$.
@@ -836,51 +837,51 @@ $
 
 Детерминированная часть времени ожидания пользователя равна:
 $
-  #deterministic_part_of_tus_LSI = #queue_time_execute_search_LSI + #deterministic_part_of_tcsi_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
+  #deterministic_part_of_tus_search_LSI = #queue_time_execute_search_LSI + #deterministic_part_of_tcsi_search_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
 $
 #aftermath([
   тогда случайная часть $#time_user_search_LSI$ равна сумме двух независимых случайных величин:
 ])
 $
-  #time_user_search_LSI - #deterministic_part_of_tus_LSI = #random_part_of_tss_LSI + #random_part_of_tcs_LSI,
+  #time_user_search_LSI - #deterministic_part_of_tus_search_LSI = #random_part_of_tss_search_LSI + #random_part_of_tcs_search_LSI,
 $
 #aftermath([
-  где $#random_part_of_tss_LSI tilde Gamma(2#user_time_k, #user_time_theta)$ и $#random_part_of_tcs_LSI$ --- максимум $N$ независимых одинаково распределенных случайных величин с известной функцией распределения $F_#random_part_of_tcs_LSI (t)$.
+  где $#random_part_of_tss_search_LSI tilde Gamma(2#user_time_k, #user_time_theta)$ и $#random_part_of_tcs_search_LSI$ --- максимум $N$ независимых одинаково распределенных случайных величин с известной функцией распределения $F_#random_part_of_tcs_search_LSI (t)$.
 ])
 
-Обозначим $tau = #timeout - #deterministic_part_of_tus_LSI$. Тогда:
+Обозначим $tau = #timeout - #deterministic_part_of_tus_search_LSI$. Тогда:
 $
-  P(#time_user_search_LSI >= #timeout) = P(#random_part_of_tss_LSI + #random_part_of_tcs_LSI >= tau).
+  P(#time_user_search_LSI >= #timeout) = P(#random_part_of_tss_search_LSI + #random_part_of_tcs_search_LSI >= tau).
 $
 
 Если $tau <= 0$, то таймаут наступает с вероятностью 1, так как даже детерминированная часть превышает допустимое время.
 
-При $tau > 0$ воспользуемся формулой свертки. Плотность распределения $#random_part_of_tss_LSI$ известна в явном виде:
+При $tau > 0$ воспользуемся формулой свертки. Плотность распределения $#random_part_of_tss_search_LSI$ известна в явном виде:
 $
-  f_#random_part_of_tss_LSI (t) = t^(2#user_time_k - 1) e^(-t \/ #user_time_theta) / (#user_time_theta^(2#user_time_k) Gamma(2#user_time_k)), quad t >= 0.
+  f_#random_part_of_tss_search_LSI (t) = t^(2#user_time_k - 1) e^(-t \/ #user_time_theta) / (#user_time_theta^(2#user_time_k) Gamma(2#user_time_k)), t >= 0.
 $
 
 Тогда вероятность таймаута рассчитывается через свертку:
 $
-  P(#random_part_of_tss_LSI + #random_part_of_tcs_LSI >= tau) = integral_0^tau f_#random_part_of_tss_LSI (t) [1 - F_#random_part_of_tcs_LSI (tau - t)] d t + integral_tau^infinity f_#random_part_of_tss_LSI (t) d t.
+  P(#random_part_of_tss_search_LSI + #random_part_of_tcs_search_LSI >= tau) = integral_0^tau f_#random_part_of_tss_search_LSI (t) [1 - F_#random_part_of_tcs_search_LSI (tau - t)] d t + integral_tau^infinity f_#random_part_of_tss_search_LSI (t) d t.
 $
 
-Первое слагаемое соответствует случаю, когда $#random_part_of_tss_LSI = t < tau$, но $#random_part_of_tcs_LSI$ компенсирует оставшееся время до таймаута. Второе слагаемое соответствует случаю, когда уже одной сетевой задержки пользователя достаточно для превышения таймаута.
+Первое слагаемое соответствует случаю, когда $#random_part_of_tss_search_LSI = t < tau$, но $#random_part_of_tcs_search_LSI$ компенсирует оставшееся время до таймаута. Второе слагаемое соответствует случаю, когда уже одной сетевой задержки пользователя достаточно для превышения таймаута.
 
 Подставляя известные выражения:
 $
   P(#time_user_search_LSI >= #timeout) =\
-  = integral_0^tau f_#random_part_of_tss_LSI (t) (1 - [gamma(2#cluster_time_k, frac(tau - t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t +\
+  = integral_0^tau f_#random_part_of_tss_search_LSI (t) (1 - [gamma(2#cluster_time_k, frac(tau - t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t +\
   + 1 - gamma(2#user_time_k, frac(tau, #user_time_theta, style: "horizontal")) / Gamma(2#user_time_k).
 $
 
-Данный интеграл можно вычислить численно методом квадратуры Гаусса.
+Данный интеграл можно вычислить численно методом Симпсона.
 
 Среднее время обслуживания заявки равняется $M[#time_user_search_LSI]$.
 
 Среднее время ожидания заявки в очереди является суммарным временем нахождения заявки во всех очередях, то есть рассчитывается по формуле (@queue-time-total-LSI):
 $
-  #queue_time_total_LSI = 2 #queue_time_execute_search_LSI,
+  #queue_time_total_update_LSI = 2 #queue_time_execute_search_LSI,
 $ <queue-time-total-LSI>
 #aftermath([
   так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_search_LSI$, потом еще по столько же параллельно на каждом исполнителе.
@@ -1238,7 +1239,7 @@ $
 
 В частном случае $#user_time_theta = #cluster_time_theta = theta$ сумма $#random_part_of_tus_GSI + #random_part_of_tce_GSI$ имеет гамма-распределение $Gamma(2#user_time_k + 2#cluster_time_k, theta)$, и плотность $f_X$ записывается в замкнутом виде, что упрощает численное интегрирование.
 
-Все интегралы можно вычислить численно методом квадратуры Гаусса. При этом внутренняя свёртка для $f_X(t)$ также вычисляется численно в каждой точке, что приводит к двойному численному интегрированию.
+Все интегралы можно вычислить численно методом Симпсона. При этом внутренняя свёртка для $f_X(t)$ также вычисляется численно в каждой точке, что приводит к двойному численному интегрированию.
 
 Среднее время обслуживания заявки равняется $M[#time_user_search_GSI]$.
 
@@ -1257,37 +1258,412 @@ $ <queue-time-total-GSI>
 + исполнитель отправляет подтверждение записи координатору;
 + координатор отправляет подтверждение записи пользователю.
 
-Получается, каждая заявка на обновление порождает ровно одну подзадачу для одного исполнителя. Поток запросов координатора #intensity_update распределяется равномерно на исполнителей: $#intensity_update^"(sub)" = #intensity_update / #replicaset_count$.
+На рисунке @lsi-seq-build представлена диаграмма последовательности обновления ЛВИ. На ней изображены линии жизни следующих объектов:
+- клиент --- инициатор обращения к СУБД Picodata;
+- координатор;
+- исполнитель m --- исполнитель набора реплик на котором лежит первичный ключ записи.
+
+#figure(
+  image("schemas-lsi-build-seq.drawio.pdf", width: 80%),
+  caption: "UML Sequence диаграмма построения ЛВИ в СУБД Picodata при вставке в шардированную таблицу",
+) <lsi-seq-build>
+
+Количество сетевых запросов при обновлении ЛВИ ($#net_reqs_update_LSI_name$) равно 4.
+
+#theorem(name: [о времени ожидания исполнения запроса координатором при обновлении ЛВИ])[
+
+  Время ожидания исполнения запроса координатором $#service_time_coordinate_update_LSI$ является случайной величиной и рассчитывается по следующей формуле:
+  $
+    #service_time_coordinate_update_LSI = #queue_time_execute_update_LSI +
+    #time_coordinate_update_LSI =\
+    = #queue_time_execute_update_LSI + #time_coordinate_update_LSI_ith_right_side,
+  $ <time-coordinate-update-LSI>
+  #aftermath([
+    где:
+  ])
+  - $#queue_time_execute_update_LSI$ --- время ожидания запроса в очереди исполнителя;
+  - $#time_coordinate_update_LSI$ --- время ожидания ответа от исполнителя;
+  - $#cluster_request_time$ и $#cluster_response_time$ --- времена задержки передачи запроса между координатором и исполнителем по сети;
+  - $#exec_plan_size$ --- размер плана исполнения;
+  - $#cluster_net_speed$ --- скорость передачи данных между узлами СУБД;
+  - $#service_time_execute_update_LSI$ --- время ожидания обработки запроса исполнителем;
+  - $#pk_per_fk_cardinality_per_replicaset$ --- количество записей с искомым вторичным ключом на наборе реплик;
+  - $#row_size$ --- размер одной записи.
+]
+
+#proof[
+
+  Запрос сначала попадает в очередь исполнителя и находится там $#queue_time_execute_search_LSI$ секунд.
+
+  Составленный план запроса отправляется одному исполнителю по сети.
+
+  Отправление плана сопровождается сетевой задержкой, которая длится $#cluster_request_time$, моделируемая как гамма-распределение $Gamma(#cluster_time_k, #cluster_time_theta)$.
+
+  Положим, что план запроса весит $#exec_plan_size$ байтов, а скорость передачи данных между узлами кластера равна $#cluster_net_speed$ байтов в секунду. Тогда весь план будет передан через $frac(#exec_plan_size, #cluster_net_speed, style: "skewed")$ секунд.
+
+  На исполнителе время ожидания исполнения заявки, то есть время, проведенное в очереди в сумме с временем непосредственной обработки заявки обозначим как $#service_time_execute_search_LSI$.
+
+  Результат работы исполнителя отправляется координатору отдельным сетевым запросом с задержкой $#cluster_request_time_ith$, моделируемой гамма-распределением $Gamma(#cluster_time_k, #cluster_time_theta)$.
+
+  Сам результат весит 16 байтов --- это подтверждение записи, время его передачи мало, поэтому не учитывается.
+
+  Итого, время ожиданеия исполнения запроса координатора $#service_time_coordinate_update_LSI$ рассчитывается по следующей формуле:
+  $
+    #service_time_coordinate_update_LSI = #queue_time_execute_update_LSI +
+    #time_coordinate_update_LSI =\
+    = #queue_time_execute_update_LSI + #time_coordinate_update_LSI_ith_right_side,
+  $
+
+  В правой части равенства присутствуют случайные величины, так что и левая часть является случайной величиной.
+]
+
+Получается, каждая заявка на обновление порождает ровно одну подзадачу для одного исполнителя. Поток запросов координатора #intensity_update_LSI распределяется равномерно на исполнителей:
+$ #subintensity_update_LSI = #intensity_update / #replicaset_count. $ <subintensity-update-LSI>
+
+Рассмотрим чему равно время обработки заявки исполнителем $#service_time_execute_update_LSI$.
 
 Обновление начинается с записи в журнал упреждающей записи, которое занимает константное время #wal_time. После этого происходит поиск позиции ключа в B+\*-дереве для обновления, на что тратится #btree_node_search_ops_update_LSI операций сравнения ключей и #btree_node_jumps_update_LSI переходов по указателям.
 
-После поиска происходит обновление дерева, например вставка нового элемента. В лучшем случае, когда лист не заполнен до конца, вставка происходит за одну операцию записи в запоминающее устройство, в худшем --- все узлы в пути до листа (включая сам лист) нужно разделить на два. Для простоты модели, сошлемся на статью @leung1984approximate, в которой доказано, что средняя заполненность B\*-дерева, а значит и средняя заполненность каждого узла равна $#btree_full_node_probability = #btree_full_node_probability_value$, где $0$ --- узел пуст, $1$ --- узел полон. Получается, что в среднем остается $(#btree_max_keys) (1 - #btree_full_node_probability_value) = #btree_free_space_before_overflow_long_update_LSI$ вставок перед переполнением узла, соответственно вероятность переполнения на конкретной вставке равна $(#btree_free_space_before_overflow_long_update_LSI)^(-1) approx #btree_free_space_before_overflow_inv_update_LSI$. Разделение узла происходит за $3$ операции записи --- перезапись разделенного узла, запись нового братского узла и перезапись родительского узла. Случай каскадного разделения родительских узлов возможен, но маловероятен (вероятность этого события уменьшается с каждым родителем экспоненциально), так что он не учтен.
+После поиска происходит обновление дерева, например вставка нового элемента. В лучшем случае, когда лист не заполнен до конца, вставка происходит за одну операцию записи в запоминающее устройство, в худшем --- все узлы в пути до листа (включая сам лист) нужно разделить на два. Для простоты модели, сошлемся на статью @leung1984approximate, в которой доказано, что средняя заполненность B\*-дерева, а значит и средняя заполненность каждого узла равна $#btree_full_node_probability = #btree_full_node_probability_value$, где $0$ --- узел пуст, $1$ --- узел полон.
+
+Получается, что в среднем остается $(#btree_max_keys) (1 - #btree_full_node_probability_value) = #btree_free_space_before_overflow_long_update_LSI$ вставок перед переполнением узла, соответственно вероятность переполнения на конкретной вставке равна $(#btree_free_space_before_overflow_long_update_LSI)^(-1) approx #btree_free_space_before_overflow_inv_update_LSI$. Разделение узла происходит за $3$ операции записи --- перезапись разделенного узла, запись нового братского узла и перезапись родительского узла. Случай каскадного разделения родительских узлов возможен, но маловероятен (вероятность этого события уменьшается с каждым родителем экспоненциально), так что он не учтен.
 
 Итого, время решения подзадачи обновления равно:
 $
-  #time_execute_update_LSI = #wal_time & + #btree_node_search_ops_update_LSI / #cpu_frequency + \
+  #time_execute_update_LSI = #wal_time & + 2(#btree_node_search_ops_update_LSI / #cpu_frequency + \
+    & + (#btree_node_jumps_update_LSI + 3 dot #btree_free_space_before_overflow_inv_update_LSI) / #mem_frequency)
+$
+
+Это также детерминированная величина. Вычислим время ожидания обработки заявки $#service_time_execute_update_LSI$ с помощью формулы Полячека-Хинчина:
+$
+  #load_executor_update_LSI = #subintensity_update_LSI dot #time_execute_update_LSI
+$ <load-executor-update-LSI>
+$
+  #queue_length_execute_update_LSI &= #load_executor_update_LSI + (#load_executor_update_LSI^2 + #subintensity_update_LSI D[#time_execute_update_LSI])/(2 (1 - #load_executor_update_LSI)) =\
+  &= #load_executor_update_LSI + #load_executor_update_LSI^2/(2 (1 - #load_executor_update_LSI)),
+$
+#aftermath([
+  и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
+])
+$
+  #service_time_execute_update_LSI = #queue_length_execute_update_LSI / #intensity_update = #time_execute_update_LSI + (#load_executor_update_LSI #time_execute_update_LSI)/(2 (1 - #load_executor_update_LSI)).
+$
+
+Время, проведенное в очереди равно времени проведенному в системе без времени обслуживания заявки, тогда:
+$
+  #queue_time_execute_update_LSI = #service_time_execute_update_LSI - #time_execute_update_LSI = (#load_executor_update_LSI #time_execute_update_LSI)/(2 (1 - #load_executor_update_LSI)).
+$
+
+Рассчитаем время работы координатора:
+$
+  #time_coordinate_update_LSI = #time_coordinate_search_LSI_ith_right_side.
+$
+
+Только времена сетевой задержки --- случайные величины, остальные --- скалярные, так что, согласно свойствам гамма-распределения, время работы координатора --- случайная величина, имеющая сдвинутое гамма-распределение. Cлучайную часть $#time_coordinate_update_LSI$ обозначим  $#random_part_of_tcs_update_LSI$, а детерминированную --- $#deterministic_part_of_tcs_update_LSI$:
+$
+  #deterministic_part_of_tcs_update_LSI = #service_time_execute_update_LSI + (#exec_plan_size + #pk_per_fk_cardinality_per_replicaset #row_size)/ #cluster_net_speed,
+$
+$
+  #random_part_of_tcs_update_LSI = #time_coordinate_update_LSI - #deterministic_part_of_tcs_update_LSI tilde Gamma(2#cluster_time_k, #cluster_time_theta).
+$
+
+Следовательно функция распределения равна:
+$
+  F_#random_part_of_tcs_update_LSI (t) = P(#random_part_of_tcs_update_LSI <= t) = gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k).
+$
+
+Времена сетевых задержек во времени ожидания пользователя $#time_user_update_LSI$ обозначим $#random_part_of_tus_update_LSI$, тогда:
+$
+  #random_part_of_tus_update_LSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
+$
+#aftermath([
+  следовательно:
+])
+$
+  M[#time_user_update_LSI] = M[#random_part_of_tus_update_LSI] + M[#service_time_coordinate_update_LSI] =\
+  = #user_time_k#user_time_theta + M[#service_time_coordinate_update_LSI],
+$
+$
+  D[#time_user_update_LSI] = D[#random_part_of_tcs_update_LSI] + D[#service_time_coordinate_update_LSI] =\
+  = #user_time_k#user_time_theta^2 + D[#time_coordinate_update_LSI].
+$
+
+== Расчет параметров эффективности
+Максимальное количество запросов в секунду достигается при максимальной загрузке системы. Так как мы договорились, что по факту работа на координаторе не учитывается в модели, то на него можно подать бесконечную нагрузку. Тогда единственным ограничивающим фактором системы является время обработки заявки исполнителем $#time_execute_update_LSI$.
+
+Для устойчивости системы, загрузка системы $#load_executor_update_LSI$ должна не превышать единицу. По определению, загрузка системы рассчитывается по формуле (@load-executor-update-LSI), значит максимальная нагрузка системы рассчитывается по следующей формуле:
+$
+  #max_subintensity_update_LSI = 1/#time_execute_update_LSI,
+$
+#aftermath([
+  а по формуле (@subintensity-update-LSI), верно, что:
+])
+$
+  #max_intensity_update_LSI = #max_subintensity_update_LSI #replicaset_count = #replicaset_count/ #time_execute_update_LSI.
+$
+
+Найдем вероятность того, что время ожидания пользователем завершения операции обновления $#time_user_update_LSI$ превысит заданный лимит $#timeout$, то есть вычислим $P(#time_user_update_LSI >= #timeout)$.
+
+Время ожидания пользователя складывается из детерминированной и случайной частей:
+$
+  #time_user_update_LSI = #queue_time_execute_update_LSI
+  + #deterministic_part_of_tcs_update_LSI
+  + #random_part_of_tcs_update_LSI
+  + #random_part_of_tus_update_LSI,
+$
+где
+- $#random_part_of_tus_update_LSI tilde "Gamma"(2#user_time_k, #user_time_theta)$ — суммарная задержка сети между пользователем и координатором (запрос + ответ);
+- $#random_part_of_tcs_update_LSI tilde "Gamma"(2#cluster_time_k, #cluster_time_theta)$ — суммарная задержка сети между координатором и исполнителем;
+- детерминированная составляющая $#deterministic_part_of_tus_GSI = #queue_time_execute_update_LSI + #deterministic_part_of_tcs_update_LSI$.
+Результат подтверждения записи пренебрежимо мал, поэтому не учитывается.
+
+Определим $tau = #timeout - #deterministic_part_of_tus_GSI$. При $tau > 0$ воспользуемся формулой свёртки для суммы двух независимых случайных величин. Обозначим $X = #random_part_of_tus_update_LSI$, $Y = #random_part_of_tcs_update_LSI$. Плотность $X$ известна:
+$
+  f_X(t) = frac(t^(2#user_time_k - 1) e^(-t \/ #user_time_theta), #user_time_theta^(2#user_time_k) Gamma(2#user_time_k)), t >= 0.
+$
+Функция распределения $Y$ выражается через регуляризованную нижнюю неполную гамма-функцию:
+$
+  F_Y(y) = P(Y <= y) = frac(gamma(2#cluster_time_k, y \/ #cluster_time_theta), Gamma(2#cluster_time_k)).
+$
+
+Вероятность таймаута:
+$
+  P(#time_user_update_LSI >= #timeout) = P(X + Y >= tau) = \
+  = integral_0^tau f_X(t) (1 - F_Y(tau - t)) d t + integral_tau^infinity f_X(t) d t.
+$
+
+Второе слагаемое — вероятность того, что одна лишь пользовательская задержка уже превышает $tau$,
+и равно $1 - P(2#user_time_k, tau \/ #user_time_theta)$, где $P(a, x) = gamma(a, x) \/ Gamma(a)$.
+Первое слагаемое учитывает случаи, когда $X = t < tau$, но $Y$ компенсирует оставшееся время.
+
+Подставляя явные выражения, получаем окончательную формулу:
+$
+  P(#time_user_update_LSI >= #timeout) = \
+  = integral_0^tau frac(t^(2#user_time_k - 1) e^(-t \/ #user_time_theta), #user_time_theta^(2#user_time_k) Gamma(2#user_time_k))
+  (1 - frac(gamma(2#cluster_time_k, (tau - t) \/ #cluster_time_theta), Gamma(2#cluster_time_k))) d t + \
+  + 1 - frac(gamma(2#user_time_k, tau \/ #user_time_theta), Gamma(2#user_time_k)).
+$
+
+Все величины, входящие в формулу, определены в предыдущих разделах. Интеграл вычисляется численно методом Симпсона, так как замкнутая форма для свертки гамма-распределений с разными параметрами масштаба отсутствует. В частном случае $#user_time_theta = #cluster_time_theta$ сумма $X+Y$ имеет гамма-распределение $Gamma(2#user_time_k + 2#cluster_time_k, #user_time_theta)$, и вероятность можно вычислить аналитически через регуляризованную гамма-функцию.
+
+Среднее время обслуживания заявки равняется $M[#time_user_update_LSI]$.
+
+Среднее время ожидания заявки в очереди является суммарным временем нахождения заявки во всех очередях, то есть рассчитывается по формуле (@queue-time-total-update-LSI):
+$
+  #queue_time_total_update_LSI = 2 #queue_time_execute_update_LSI,
+$ <queue-time-total-update-LSI>
+#aftermath([
+  так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_update_LSI$, потом еще столько же в исполнителе.
+])
+
+== Обновление в глобальном индексе <gsi-update>
+Алгоритм записи в кластере с такой индексной структурой выглядит следующим образом:
++ координатор принимает пользовательский запрос, расчитывает бакет обновляемой записи и отправляет план исполнения исполнителю с первичным ключом;
++ исполнитель с первичным ключом добавляет информацию об обновлении таблицы в журнал упреждающей записи, обновляет B+\*-дерево индекса первичного ключа b отправляет подтверждение записи координатору;
++ координатор расчитывает бакет вторичного ключа и отправляет план исполнения исполнителю со вторичным ключом;
++ исполнитель со вторичным ключом добавляет информацию об обновлении таблицы в журнал упреждающей записи, обновляет B+\*-дерево ГВИ;
++ исполнитель со вторичным ключом возвращает координатору подтверждение записи;
++ координатор отправляет подтверждение записи пользователю.
+
+На рисунке @gsi-seq-build представлена диаграмма последовательности обновления ГВИ. На ней изображены линии жизни следующих объектов:
+- клиент --- инициатор обращения к СУБД Picodata;
+- координатор;
+- исполнитель m --- исполнитель набора реплик на котором лежит первичный ключ записи.
+- исполнитель k --- исполнитель набора реплик на котором лежит вторичный ключ записи.
+
+#figure(
+  image("schemas-gsi-build-seq.drawio.pdf", width: 100%),
+  caption: "UML Sequence диаграмма построения ГВИ в СУБД Picodata при вставке в шардированную таблицу",
+) <gsi-seq-build>
+
+Количество сетевых запросов при обновлении ГВИ ($#net_reqs_update_GSI_name$) равно 4.
+
+#theorem(name: [о времени ожидания исполнения запроса координатором при обновлении ГВИ])[
+
+  Время ожидания исполнения запроса координатором $#service_time_coordinate_update_GSI$ является случайной величиной и рассчитывается по следующей формуле:
+  $
+    #service_time_coordinate_update_GSI = #queue_time_execute_update_GSI +
+    #time_coordinate_pk_update_GSI + #time_coordinate_fk_update_GSI = #queue_time_execute_update_GSI +\
+    + #time_execute_pk_update_GSI_right_side +\
+    + #time_execute_fk_update_GSI_right_side,
+  $ <time-coordinate-update-GSI>
+  #aftermath([
+    где:
+  ])
+  - $#queue_time_execute_update_GSI$ --- время ожидания запроса в очереди исполнителя;
+  - $#time_coordinate_pk_update_GSI$ --- время ожидания ответа от исполнителя с первичным ключом;
+  - $#time_coordinate_fk_update_GSI$ --- время ожидания ответа от исполнителя со вторичным ключом;
+  - $#cluster_request_time_pk$ и $#cluster_response_time_pk$ --- времена задержки передачи запроса между координатором и исполнителем с первичным ключом по сети;
+  - $#cluster_request_time_fk$ и $#cluster_response_time_fk$ --- времена задержки передачи запроса между координатором и исполнителем со вторичным ключом по сети;
+  - $#exec_plan_size$ --- размер плана исполнения;
+  - $#cluster_net_speed$ --- скорость передачи данных между узлами СУБД;
+  - $#service_time_execute_pk_update_GSI$ --- время ожидания обработки запроса исполнителем с первичным ключом;
+  - $#service_time_execute_fk_update_GSI$ --- время ожидания обработки запроса исполнителем со вторичным ключом.
+]
+
+#proof[
+
+  Запрос сначала попадает в очередь исполнителя и находится там $#queue_time_execute_search_GSI$ секунд.
+
+  Составленный план запроса отправляется исполнителю с первичным ключом по сети.
+
+  Все сетевые запросы сопровождается сетевой задержкой, моделируемая как гамма-распределение $Gamma(#cluster_time_k, #cluster_time_theta)$.
+
+  Положим, что план запроса весит $#exec_plan_size$ байтов, а скорость передачи данных между узлами кластера равна $#cluster_net_speed$ байтов в секунду. Тогда весь план будет передан через $frac(#exec_plan_size, #cluster_net_speed, style: "skewed")$ секунд.
+
+  На исполнителе с первичным ключом время ожидания исполнения заявки, то есть время, проведенное в очереди в сумме с временем непосредственной обработки заявки обозначим как $#service_time_execute_pk_update_GSI$.
+
+  На исполнителе со вторичным ключом время ожидания исполнения заявки, то есть время, проведенное в очереди в сумме с временем непосредственной обработки заявки обозначим как $#service_time_execute_fk_update_GSI$.
+
+  Сам результат весит 16 байтов --- это подтверждение записи, время его передачи мало, поэтому не учитывается.
+
+  Итого, время ожиданеия исполнения запроса координатора $#service_time_coordinate_update_GSI$ рассчитывается по следующей формуле:
+  $
+    #service_time_coordinate_update_GSI = #queue_time_execute_update_GSI +
+    #time_coordinate_pk_update_GSI + #time_coordinate_fk_update_GSI = #queue_time_execute_update_GSI +\
+    + #time_execute_pk_update_GSI_right_side +\
+    + #time_execute_fk_update_GSI_right_side,
+  $
+
+  В правой части равенства присутствуют случайные величины, так что и левая часть является случайной величиной.
+]
+
+Получается, каждая заявка на обновление порождает ровно две подзадачи. Поток запросов координатора #intensity_update_GSI распределяется равномерно на исполнителей:
+$ #subintensity_update_GSI = (2#intensity_update) / #replicaset_count. $ <subintensity-update-GSI>
+
+Время исполнения запроса на исполнителе с первичным ключом рассчитывается как худший случай поиска в B+\*-дереве, уже несколько раз рассмотренный, в сумме с временем записи в журнал упреждающей записи. Пропустим повторные вычисления:
+$
+  #time_execute_pk_update_GSI = #wal_time & + #btree_node_search_ops_update_LSI / #cpu_frequency + \
   & + (#btree_node_jumps_update_LSI + 3 dot #btree_free_space_before_overflow_inv_update_LSI) / #mem_frequency
 $
 
-Это тоже детерминированная величина.
+Подобный расчет верен и для исполнителя со вторичным ключом:
+$
+  #time_execute_fk_update_GSI = #wal_time & + #btree_node_search_ops_update_LSI / #cpu_frequency + \
+  & + (#btree_node_jumps_update_LSI + 3 dot #btree_free_space_before_overflow_inv_update_LSI) / #mem_frequency
+$
 
-== Обновление в глобальном индексе <gsi-update>
+Расчеты приведенные ниже верны как для исполнителя с первичными ключами, так и для исполнителя со вторичными ключами.
+
+Вычислим время ожидания обработки заявки $#service_time_execute_update_LSI$ с помощью формулы Полячека-Хинчина:
+$
+  #load_executor_update_GSI = #subintensity_update_GSI #time_execute_pk_update_GSI.
+$ <load-executor-update-GSI>
+$
+  #queue_length_execute_update_GSI &= #load_executor_update_GSI + (#load_executor_update_GSI^2 + #subintensity_update_GSI D[#time_execute_pk_update_GSI])/(2 (1 - #load_executor_update_GSI)) =\
+  &= #load_executor_update_GSI + #load_executor_update_GSI^2/(2 (1 - #load_executor_update_GSI)),
+$
+#aftermath([
+  и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
+])
+$
+  #service_time_execute_pk_update_GSI = #queue_length_execute_update_GSI / #intensity_update = #time_execute_pk_update_GSI + (#load_executor_update_GSI #time_execute_pk_update_GSI)/(2 (1 - #load_executor_update_GSI)).
+$
+
+Время, проведенное в очереди равно времени проведенному в системе без времени обслуживания заявки, тогда:
+$
+  #queue_time_execute_update_GSI = #service_time_execute_pk_update_GSI - #time_execute_pk_update_GSI = (#load_executor_update_GSI #time_execute_pk_update_GSI)/(2 (1 - #load_executor_update_GSI)).
+$
+
+Рассчитаем время работы координатора. Только времена сетевой задержки --- случайные величины, остальные --- скалярные, так что, согласно свойствам гамма-распределения, время работы координатора --- случайная величина, имеющая сдвинутое гамма-распределение. Cлучайную часть $#time_coordinate_pk_update_GSI$ обозначим  $#random_part_of_tcs_update_GSI$, а детерминированную --- $#deterministic_part_of_tcs_update_GSI$:
+$
+  #deterministic_part_of_tcs_update_GSI = #service_time_execute_pk_update_GSI + #service_time_execute_fk_update_GSI + #exec_plan_size / #cluster_net_speed,
+$
+$
+  #random_part_of_tcs_update_GSI = #time_coordinate_pk_update_GSI - #deterministic_part_of_tcs_update_GSI tilde Gamma(4#cluster_time_k, #cluster_time_theta).
+$
+
+Следовательно функция распределения равна:
+$
+  F_#random_part_of_tcs_update_GSI (t) = P(#random_part_of_tcs_update_GSI <= t) = gamma(4#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(4#cluster_time_k).
+$
+
+Времена сетевых задержек во времени ожидания пользователя $#time_user_update_GSI$ обозначим $#random_part_of_tus_update_GSI$, тогда:
+$
+  #random_part_of_tus_update_GSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
+$
+#aftermath([
+  следовательно:
+])
+$
+  M[#time_user_update_GSI] = M[#random_part_of_tus_update_GSI] + M[#service_time_coordinate_update_GSI] =\
+  = #user_time_k#user_time_theta + M[#time_coordinate_pk_update_GSI] + M[#time_coordinate_fk_update_GSI],
+$
+$
+  D[#time_user_update_GSI] = D[#random_part_of_tcs_update_GSI] + D[#service_time_coordinate_update_GSI] =\
+  = #user_time_k#user_time_theta^2 + 2D[#time_coordinate_pk_update_GSI].
+$
+
+== Расчет параметров эффективности
+Максимальное количество запросов в секунду достигается при максимальной загрузке системы. Так как мы договорились, что по факту работа на координаторе не учитывается в модели, то на него можно подать бесконечную нагрузку. Тогда единственным ограничивающим фактором системы является время обработки заявки исполнителем $#time_execute_pk_update_GSI$.
+
+Для устойчивости системы, загрузка системы $#load_executor_update_GSI$ должна не превышать единицу. По определению, загрузка системы рассчитывается по формуле (@load-executor-update-GSI), значит максимальная нагрузка системы рассчитывается по следующей формуле:
+$
+  #max_subintensity_update_GSI = 1/#time_execute_pk_update_GSI,
+$
+#aftermath([
+  а по формуле (@subintensity-update-GSI), верно, что:
+])
+$
+  #max_intensity_update_GSI = #max_subintensity_update_GSI #replicaset_count = #replicaset_count/ #time_execute_pk_update_GSI.
+$
+
+
+Найдем вероятность того, что время ожидания пользователем завершения операции обновления $#time_user_update_GSI$ превысит заданный лимит $#timeout$, то есть вычислим $P(#time_user_update_GSI >= #timeout)$.
+
+Время ожидания пользователя складывается из детерминированной и случайной частей:
+$
+  #time_user_update_GSI = #queue_time_execute_update_GSI
+  + #deterministic_part_of_tcs_update_GSI
+  + #random_part_of_tcs_update_GSI
+  + #random_part_of_tus_update_GSI,
+$
+где
+- $#random_part_of_tus_update_GSI tilde "Gamma"(2#user_time_k, #user_time_theta)$ — суммарная задержка сети между пользователем и координатором (запрос + ответ);
+- $#random_part_of_tcs_update_GSI tilde "Gamma"(4#cluster_time_k, #cluster_time_theta)$ — суммарная задержка сети между координатором и исполнителем;
+- детерминированная составляющая $#deterministic_part_of_tus_GSI = #queue_time_execute_update_GSI + #deterministic_part_of_tcs_update_GSI$.
+Результат подтверждения записи пренебрежимо мал, поэтому не учитывается.
+
+Определим $tau = #timeout - #deterministic_part_of_tus_GSI$. При $tau > 0$ воспользуемся формулой свёртки для суммы двух независимых случайных величин. Обозначим $X = #random_part_of_tus_update_GSI$, $Y = #random_part_of_tcs_update_GSI$. Плотность $X$ известна:
+$
+  f_X(t) = frac(t^(2#user_time_k - 1) e^(-t \/ #user_time_theta), #user_time_theta^(2#user_time_k) Gamma(2#user_time_k)), t >= 0.
+$
+Функция распределения $Y$ выражается через регуляризованную нижнюю неполную гамма-функцию:
+$
+  F_Y(y) = P(Y <= y) = frac(gamma(4#cluster_time_k, y \/ #cluster_time_theta), Gamma(4#cluster_time_k)).
+$
+
+Вероятность таймаута:
+$
+  P(#time_user_update_GSI >= #timeout) = P(X + Y >= tau) = \
+  = integral_0^tau f_X(t) (1 - F_Y(tau - t)) d t + integral_tau^infinity f_X(t) d t.
+$
+
+Второе слагаемое — вероятность того, что одна лишь пользовательская задержка уже превышает $tau$,
+и равно $1 - P(2#user_time_k, tau \/ #user_time_theta)$, где $P(a, x) = gamma(a, x) \/ Gamma(a)$.
+Первое слагаемое учитывает случаи, когда $X = t < tau$, но $Y$ компенсирует оставшееся время.
+
+Подставляя явные выражения, получаем окончательную формулу:
+$
+  P(#time_user_update_GSI >= #timeout) = \
+  = integral_0^tau frac(t^(2#user_time_k - 1) e^(-t \/ #user_time_theta), #user_time_theta^(2#user_time_k) Gamma(2#user_time_k))
+  (1 - frac(gamma(4#cluster_time_k, (tau - t) \/ #cluster_time_theta), Gamma(4#cluster_time_k))) d t + \
+  + 1 - frac(gamma(2#user_time_k, tau \/ #user_time_theta), Gamma(2#user_time_k)).
+$
+
+Все величины, входящие в формулу, определены в предыдущих разделах. Интеграл вычисляется численно методом Симпсона, так как замкнутая форма для свертки гамма-распределений с разными параметрами масштаба отсутствует. В частном случае $#user_time_theta = #cluster_time_theta$ сумма $X+Y$ имеет гамма-распределение $Gamma(2#user_time_k + 4#cluster_time_k, #user_time_theta)$, и вероятность можно вычислить аналитически через регуляризованную гамма-функцию.
+
+Среднее время обслуживания заявки равняется $M[#time_user_update_GSI]$.
+
+Среднее время ожидания заявки в очереди является суммарным временем нахождения заявки во всех очередях, то есть рассчитывается по формуле (@queue-time-total-update-GSI):
+$
+  #queue_time_total_update_GSI = 3 #queue_time_execute_update_GSI,
+$ <queue-time-total-update-GSI>
+#aftermath([
+  так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_update_GSI$, потом еще столько же в исполнителе.
+])
 
 == Результат расчетов и сравнение
-
-// ==== Построение ЛВИ <lsi-build-punkt>
-// На рисунке @lsi-seq-build представлена диаграмма последовательности построения ЛВИ. На ней изображены линии жизни следующих объектов:
-// - клиент --- инициатор обращения к СУБД Picodata;
-// - принимающий запросы --- узел, обрабатывающий входящий запрос. Его задача --- рассчитать бакет вставляемой записи, спланировать исполнения запроса (вычислить набор реплик с нужным бакетом), отправить на мастера набора реплик план исполнения;
-// - мастер набора реплик m --- узел, имеющий роль мастера набора реплик, в котором хранится бакет, соответствующий вставляемой записи. Он вставляет запись в таблицу и обновляет ЛВИ.
-
-// #figure(
-//   image("schemas-lsi-build-seq.drawio.pdf", width: 80%),
-//   caption: "UML Sequence диаграмма построения ЛВИ в СУБД Picodata при вставке в сегментированную таблицу",
-// ) <lsi-seq-build>
-
-// Количество сетевых запросов при поиске с использованием ЛВИ ($#lsi_build_net_reqs_name$) равно 4.
-
 
 
 = Модель функционирования плагина распределенного индекса
