@@ -1,3 +1,6 @@
+// an equation without numbering
+#let nonum_eq(eq) = math.equation(block: true, numbering: none, eq)
+
 // define variable names
 #let iter_i = $i = overline(1..N)$
 #let iter_i_to_k = $i = overline(1..k)$
@@ -51,12 +54,14 @@
 
 #let intensity_search = $lambda_"search"$
 #let intensity_update = $lambda_"update"$
+#let max_intensity = $lambda^"max"$
+#let queue_time_total = $W^"total"_"q"$
 
 // LSI SEARCH
-// SMO
 #let intensity_search_LSI = $lambda_"search,LSI"$
-#let subintensity_search_LSI = $lambda_"search,LSI"$
-#let max_subintensity_search_LSI = $lambda_"search,LSI"^"max"$
+#let subintensity_search_LSI = $lambda_"search,LSI"^"sub"$
+#let max_intensity_search_LSI = $lambda_"search,LSI"^"max"$
+#let max_subintensity_search_LSI = $lambda_"search,LSI"^"sub,max"$
 
 #let load_executor_search_LSI = $rho^"executor"_"search,LSI"$
 #let queue_time_total_LSI = $W^"total"_"search,q,LSI"$
