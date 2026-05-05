@@ -4,6 +4,7 @@ use crate::{
     config::PindConfig,
     endpoints::{
         // http::{HTTP_SERVER, routes},
+        http::{HTTP_SERVER, routes},
         rpc::register_rpc_handles,
     },
 };
@@ -32,11 +33,11 @@ impl Service for Pind {
         crate::bucket::set_bucket_event_listener();
 
         log::info!("registering HTTP handles for pind");
-        // HTTP_SERVER.with(|srv| {
-        //     routes()
-        //         .into_iter()
-        //         .for_each(|route| srv.register(Box::new(route)));
-        // });
+        HTTP_SERVER.with(|srv| {
+            routes()
+                .into_iter()
+                .for_each(|route| srv.register(Box::new(route)));
+        });
 
         log::info!("registering RPC handles for pind");
         register_rpc_handles(ctx);

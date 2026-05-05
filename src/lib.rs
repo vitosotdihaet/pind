@@ -4,7 +4,6 @@ mod endpoints;
 mod index;
 mod log;
 mod metrics;
-pub mod repo;
 mod service;
 
 use picodata_plugin::plugin::{interface::ServiceRegistry, prelude::service_registrar};
