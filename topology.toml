@@ -11,7 +11,7 @@ migration_context = [
 tiers = ["pind"]
 
 [enviroment]
-PICODATA_HTTP_LISTEN = "127.0.0.1:{{ 8000 | plus: instance_id }}"
-PICODATA_IPROTO_LISTEN = "127.0.0.1:{{ 3000 | plus: instance_id }}"
+PICODATA_HTTP_LISTEN = "127.0.0.1:{{ 8000 + instance_id }}"
+PICODATA_IPROTO_LISTEN = "127.0.0.1:{{ 3000 + instance_id }}"
 PICODATA_UNSAFE_DISABLE_PLUGIN_COMPATIBILITY_CHECK = "true"
 PICODATA_LOG_LEVEL = "error"
