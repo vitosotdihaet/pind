@@ -64,7 +64,7 @@
 #let max_subintensity_search_LSI = $lambda_"search,LSI"^"sub,max"$
 
 #let load_executor_search_LSI = $rho^"executor"_"search,LSI"$
-#let queue_time_total_LSI = $W^"total"_"search,q,LSI"$
+#let queue_time_total_search_LSI = $W^"total"_"search,q,LSI"$
 
 #let btree_node_jumps_search_LSI = $log_#btree_order #data_cardinality_per_replicaset$
 #let btree_leaf_jumps_search_LSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
@@ -80,7 +80,6 @@
 #let service_time_coordinate_search_LSI = $W^"coordinate"_"search,LSI"$
 #let service_time_execute_search_LSI = $W^"execute"_"search,LSI"$
 #let queue_time_execute_search_LSI = $W^"execute"_"search,q,LSI"$
-
 #let queue_length_execute_search_LSI = $L^"execute"_"search,LSI"$
 
 #let time_coordinate_search_LSI_ith_right_side = $#cluster_request_time_ith + #exec_plan_size / #cluster_net_speed + #service_time_execute_search_LSI + #cluster_response_time_ith + (#pk_per_fk_cardinality_per_replicaset #row_size) / #cluster_net_speed$
@@ -140,7 +139,7 @@
 #let max_intensity_search_GSI = $lambda_"search,GSI"^"max"$
 
 #let load_executor_search_GSI = $rho^"executor"_"search,GSI"$
-#let queue_time_total_GSI = $W^"total"_"search,q,GSI"$
+#let queue_time_total_search_GSI = $W^"total"_"search,q,GSI"$
 
 #let btree_node_jumps_search_GSI = $log_#btree_order #data_cardinality_per_replicaset$
 #let btree_leaf_jumps_search_GSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
