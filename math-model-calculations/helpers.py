@@ -62,3 +62,7 @@ class RV:
 
         cdf_max = np.prod(cdfs, axis=0)
         return RV(x, pdf_max, cdf_max)
+
+    def mean(self):
+        dx = self.x[1] - self.x[0]
+        return np.sum(self.x * self.pdf) * dx

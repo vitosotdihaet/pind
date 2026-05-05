@@ -1,21 +1,21 @@
 # intensities (requests/second)
-intensity_search_LSI: 1000
-intensity_update_LSI: 1000
-intensity_search_GSI: 1000
-intensity_update_GSI: 1000
-replicaset_count: 5
+intensity_search_LSI: 10000
+intensity_update_LSI: 10000
+intensity_search_GSI: 10000
+intensity_update_GSI: 10000
+replicaset_count: 15
 
 # node to node latency gamma-distribution parameters
 cluster_time_k: 1.5
-cluster_time_theta: 2.0
+cluster_time_theta: 0.02
 # bytes/s
 cluster_net_speed: 4096
 
 # user to node latency gamma-distribution parameters
 user_time_k: 1.5
-user_time_theta: 2.0
+user_time_theta: 0.1
 # bytes/s
-user_net_speed: 1024
+user_net_speed: 1000000
 
 # bytes
 row_size: 128
@@ -26,11 +26,12 @@ fk_cardinality: 100
 # exec_plan_metadata_size = $P$
 
 # float (ops/second)
-cpu_frequency: 1000000
-mem_frequency: 1000000
+cpu_frequency: 10000000
+mem_frequency: 10000000
 # in seconds
 wal_time: 0.002
 timeout: 2
 
 # btree
 btree_order: 3
+
