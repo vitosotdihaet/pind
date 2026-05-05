@@ -128,6 +128,7 @@
 #let deterministic_part_of_tus_update_LSI = $C^"user"$
 
 #let net_reqs_update_LSI_name = $"NR"^"LSI"_"update"$
+#let rps_update_LSI_name = $"RPS"^"LSI"_"update"$
 
 // GSI SEARCH
 #let fk_execute_request_time = $t^"FK-execute"_"request"$
@@ -221,3 +222,4 @@
 #let deterministic_part_of_tus_update_GSI = $C^"user"$
 
 #let net_reqs_update_GSI_name = $"NR"^"GSI"_"update"$
+#let rps_update_GSI_name = $"RPS"^"GSI"_"update"$
