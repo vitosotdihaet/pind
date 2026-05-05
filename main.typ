@@ -145,15 +145,6 @@
 
 // #term("Read-write нагрузка", "модель обращения к данным, при которой происходят чтение и изменение данных")
 
-// helpers
-#let aftermath(content) = {
-  par(
-    content,
-    first-line-indent: 0em,
-  )
-}
-
-
 // = Введение
 // TODO: упомянуть про жаргонизмы, сказать, что их нет специально
 
@@ -202,12 +193,7 @@
 - данные равномерно распределены по всем наборам реплик кластера,
 - количество данных в искомой таблице равно $#data_cardinality$,
 - количество наборов реплик в кластере равно $#replicaset_count$,
-- ПО подключения к СУБД (далее --- драйвер) знает функцию (далее --- функция сегментирования), которая по значению первичного ключа определяет конкретный набор реплик кластера, в котором должна храниться запись,
-#aftermath(
-  [
-    то поиск в структуре данных, хранящей таблицу с искомой записью будет происходить среди $#data_cardinality / #replicaset_count$ записей, в то время, когда нераспределенным СУБД пришлось бы производить его среди полного набора записей $#data_cardinality$.
-  ],
-)
+- ПО подключения к СУБД (далее --- драйвер) знает функцию (далее --- функция сегментирования), которая по значению первичного ключа определяет конкретный набор реплик кластера, в котором должна храниться запись, то поиск в структуре данных, хранящей таблицу с искомой записью будет происходить среди $#data_cardinality / #replicaset_count$ записей, в то время, когда нераспределенным СУБД пришлось бы производить его среди полного набора записей $#data_cardinality$.
 
 Однако, в СУБД Picodata нет решения задачи оптимизации поиска по вторичным ключам такой же эффективности. Сейчас происходит опрос кластера с поиском в локальных индексах. То есть среди всех данных $#data_cardinality$, $#replicaset_count$ процессов параллельно ищут запрашиваемую запись --- каждая машина совершает поиск среди $#data_cardinality / #replicaset_count$ записей.
 
@@ -663,7 +649,7 @@ $ #net_reqs_search_LSI_name = 2 N + 2. $ <lsi-search-net-reqs>
   $
     #time_coordinate_search_LSI_ith_right_side,
   $
-  #aftermath([которую мы обозначим $#time_coordinate_search_LSI_ith$.])
+  которую мы обозначим $#time_coordinate_search_LSI_ith$.
 
   Координатор должен дождаться ответа от всех исполнителей, чтобы вернуть объединенный результат пользователю, так что время ожидания исполнителей равно времени ожидания самого долгого исполнителя, что является максимумом среди всех $#time_coordinate_search_LSI_ith$.
 
@@ -703,18 +689,14 @@ $
 $
   #load_executor_search_LSI = #subintensity_search_LSI dot #time_execute_search_LSI,
 $ <load-executor-search-LSI>
-#aftermath([
-  значит он будет справляться с нагрузкой при $#load_executor_search_LSI < 1$.
-])
+значит он будет справляться с нагрузкой при $#load_executor_search_LSI < 1$.
 
 По формуле Полячека—Хинчина рассчитаем среднее количество заявок в исполнителе (количество заявок в очереди и ныне обслуживающихся):
 $
   #queue_length_execute_search_LSI &= #load_executor_search_LSI + (#load_executor_search_LSI^2 + #subintensity_search_LSI D[#time_execute_search_LSI])/(2 (1 - #load_executor_search_LSI)) =\
   &= #load_executor_search_LSI + #load_executor_search_LSI^2/(2 (1 - #load_executor_search_LSI)),
 $
-#aftermath([
-  и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла, приведенным в @rozenberg1965chtoteoriya @shortle2018fundamentals:
-])
+и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла, приведенным в @rozenberg1965chtoteoriya @shortle2018fundamentals:
 $
   #service_time_execute_search_LSI = #queue_length_execute_search_LSI / #intensity_search = #time_execute_search_LSI + (#load_executor_search_LSI #time_execute_search_LSI)/(2 (1 - #load_executor_search_LSI)).
 $
@@ -746,21 +728,15 @@ $
 $
   #time_coordinate_search_LSI = max_(#iter_i) #time_coordinate_search_LSI_ith,
 $
-#aftermath([
-  случайную часть $#time_coordinate_search_LSI$ обозначим $#random_part_of_tcs_search_LSI$, максимум среди одинаковых неслучайных величин $#deterministic_part_of_tcsi_search_LSI$ равен самому себе:
-])
+случайную часть $#time_coordinate_search_LSI$ обозначим $#random_part_of_tcs_search_LSI$, максимум среди одинаковых неслучайных величин $#deterministic_part_of_tcsi_search_LSI$ равен самому себе:
 $
   #random_part_of_tcs_search_LSI = #time_coordinate_search_LSI - #deterministic_part_of_tcsi_search_LSI
 $
-#aftermath([
-  значит, функция распределения $#random_part_of_tcs_search_LSI$ равна:
-])
+значит, функция распределения $#random_part_of_tcs_search_LSI$ равна:
 $
   F_#random_part_of_tcs_search_LSI (t) = [F_#random_part_of_tcsi_search_LSI (t)]^N = [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N,
 $
-#aftermath([
-  что позволяет нам численно найти моменты $#time_coordinate_search_LSI$ через функцию выживания @ross2019first:
-])
+что позволяет нам численно найти моменты $#time_coordinate_search_LSI$ через функцию выживания @ross2019first:
 $
   M[#random_part_of_tcs_search_LSI] = integral_0^infinity (1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^N) d t,
 $
@@ -786,9 +762,7 @@ $
 $
   #random_part_of_tss_search_LSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
 $
-#aftermath([
-  из чего можно найти математическое ожидание и дисперсию времени ожидания пользователя:
-])
+из чего можно найти математическое ожидание и дисперсию времени ожидания пользователя:
 $
   M[#time_user_search_LSI] = M[#random_part_of_tss_search_LSI] + M[#service_time_coordinate_search_LSI] + (#pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed = \
   = #user_time_k#user_time_theta + M[#service_time_coordinate_search_LSI] + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
@@ -805,9 +779,7 @@ $
 $
   #max_subintensity_search_LSI = 1/#time_execute_search_LSI,
 $
-#aftermath([
-  следовательно:
-])
+следовательно:
 $
   #max_intensity_search_LSI = 1/#time_execute_search_LSI.
 $
@@ -821,23 +793,17 @@ $
 $
   #time_user_search_LSI = #random_part_of_tss_search_LSI + #service_time_coordinate_search_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
 $
-#aftermath([
-  где $#service_time_coordinate_search_LSI$ равна $#queue_time_execute_search_LSI + #time_coordinate_search_LSI$.
-])
+где $#service_time_coordinate_search_LSI$ равна $#queue_time_execute_search_LSI + #time_coordinate_search_LSI$.
 
 Детерминированная часть времени ожидания пользователя равна:
 $
   #deterministic_part_of_tus_search_LSI = #queue_time_execute_search_LSI + #deterministic_part_of_tcsi_search_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
 $
-#aftermath([
-  тогда случайная часть $#time_user_search_LSI$ равна сумме двух независимых случайных величин:
-])
+тогда случайная часть $#time_user_search_LSI$ равна сумме двух независимых случайных величин:
 $
   #time_user_search_LSI - #deterministic_part_of_tus_search_LSI = #random_part_of_tss_search_LSI + #random_part_of_tcs_search_LSI,
 $
-#aftermath([
-  где $#random_part_of_tss_search_LSI tilde Gamma(2#user_time_k, #user_time_theta)$ и $#random_part_of_tcs_search_LSI$ --- максимум $N$ независимых одинаково распределенных случайных величин с известной функцией распределения $F_#random_part_of_tcs_search_LSI (t)$.
-])
+где $#random_part_of_tss_search_LSI tilde Gamma(2#user_time_k, #user_time_theta)$ и $#random_part_of_tcs_search_LSI$ --- максимум $N$ независимых одинаково распределенных случайных величин с известной функцией распределения $F_#random_part_of_tcs_search_LSI (t)$.
 
 Обозначим $tau = #timeout - #deterministic_part_of_tus_search_LSI$. Тогда:
 $
@@ -873,9 +839,7 @@ $
 $
   #queue_time_total_update_LSI = 2 #queue_time_execute_search_LSI,
 $ <queue-time-total-LSI>
-#aftermath([
-  так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_search_LSI$, потом еще по столько же параллельно на каждом исполнителе.
-])
+так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_search_LSI$, потом еще по столько же параллельно на каждом исполнителе.
 
 
 == Поиск в глобальном индексе <gsi-search>
@@ -906,9 +870,7 @@ $ <queue-time-total-LSI>
 
 Исходя из этой диагрммы, можно оценить количество сетевых запросов при поиске с использованием ГВИ ($#net_reqs_search_GSI_name$) по следующей формуле:
 $ 6 <= #net_reqs_search_GSI_name <= 2 k + 4, $ <gsi-search-net-reqs>
-#aftermath([
-  где k --- количество наборов реплик, среди которых расположенные все найденные первичные ключи. // Это случайная величина, расчет для которой будет приведен позже.
-])
+где k --- количество наборов реплик, среди которых расположенные все найденные первичные ключи. // Это случайная величина, расчет для которой будет приведен позже.
 
 В худшем случае, если много записей сегментированной таблицы имеют одинаковое значение искомого вторичного ключа ($#fk_cardinality -> 1$), то произойдет опрос всего кластера. Прибавим к этому отправление запросов на координатор и на исполнителя m, и получим верхнюю границу; нижняя граница получается в случае, если все найденные первичные ключи лежат на одном наборе реплик.
 
@@ -991,7 +953,7 @@ $ 6 <= #net_reqs_search_GSI_name <= 2 k + 4, $ <gsi-search-net-reqs>
   $
     #time_fk_execute_search_GSI_ith_right_side,
   $
-  #aftermath([которую мы обозначим $#time_fk_execute_search_GSI_ith$.])
+  которую мы обозначим $#time_fk_execute_search_GSI_ith$.
 
   Исполнитель со вторичным ключом должен дождаться ответа от всех исполнителей, чтобы вернуть объединенный результат пользователю, так что время ожидания исполнителей равно времени ожидания самого долгого исполнителя, что является максимумом среди всех $#time_fk_execute_search_GSI_ith$.
 
@@ -1014,7 +976,7 @@ $ #subintensity_search_GSI = (#intensity_search_GSI k) / #replicaset_count. $ <s
 $
   #time_execute_search_GSI = (n #btree_search_ops_total_search_GSI) / #cpu_frequency + (n #btree_node_jumps_search_GSI) / #mem_frequency
 $
-#aftermath([и является детерминированной величиной.])
+и является детерминированной величиной.
 
 Отсюда нагрузка на исполнителя вычисляется по следующей формуле:
 $ #load_executor_search_GSI = #time_execute_search_GSI #subintensity_search_GSI $ <load-executor-search-GSI>
@@ -1024,9 +986,7 @@ $
   #queue_length_execute_search_GSI &= #load_executor_search_GSI + (#load_executor_search_GSI^2 + #subintensity_search_GSI D[#time_execute_search_GSI])/(2 (1 - #load_executor_search_GSI)) =\
   &= #load_executor_search_GSI + #load_executor_search_GSI^2/(2 (1 - #load_executor_search_GSI)),
 $
-#aftermath([
-  и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
-])
+и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
 $
   #service_time_execute_search_GSI = #queue_length_execute_search_GSI / #intensity_search = #time_execute_search_GSI + (#load_executor_search_GSI #time_execute_search_GSI)/(2 (1 - #load_executor_search_GSI)).
 $
@@ -1045,7 +1005,7 @@ $ <time-fk-execute-search-GSI-ith-eq-time-fk-execute-search-GSI-ith-right-side>
 Для удобства, возьмем средние значения для плана исполнения и найденного количества данных, то есть:
 $ #exec_plan_size_ith = #exec_plan_size_avg, $
 $ #pk_per_fk_cardinality_per_replicaset_ith = #pk_per_fk_cardinality_per_replicaset, $
-#aftermath([тогда, формула (@time-fk-execute-search-GSI-ith-eq-time-fk-execute-search-GSI-ith-right-side) примет вид:])
+тогда, формула (@time-fk-execute-search-GSI-ith-eq-time-fk-execute-search-GSI-ith-right-side) примет вид:
 $
   #time_fk_execute_search_GSI_ith = #time_fk_execute_search_GSI_ith_right_side_bs.
 $
@@ -1072,15 +1032,11 @@ $
 $
   #random_part_of_tfe_GSI = #time_fk_execute_search_GSI - #deterministic_part_of_tfe_GSI
 $
-#aftermath([
-  значит, функция распределения $#random_part_of_tfe_GSI$ равна:
-])
+значит, функция распределения $#random_part_of_tfe_GSI$ равна:
 $
   F_#random_part_of_tfe_GSI (t) = [F_#random_part_of_tfei_GSI (t)]^k = [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k,
 $
-#aftermath([
-  что позволяет нам численно найти моменты $#time_fk_execute_search_GSI$ через функцию выживания @ross2019first:
-])
+что позволяет нам численно найти моменты $#time_fk_execute_search_GSI$ через функцию выживания @ross2019first:
 $
   M[#random_part_of_tfe_GSI] = integral_0^infinity (1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k) d t,
 $
@@ -1107,9 +1063,7 @@ $
 $
   #random_part_of_tce_GSI = #fk_execute_request_time + #fk_execute_response_time tilde Gamma(2#cluster_time_k, #cluster_time_theta),
 $
-#aftermath([
-  из чего можно найти математическое ожидание и дисперсию времени работы координатора:
-])
+из чего можно найти математическое ожидание и дисперсию времени работы координатора:
 $
   M[#time_coordinate_search_GSI] = M[#random_part_of_tce_GSI] + M[#service_time_fk_execute_search_GSI] + (#exec_plan_size_avg +#pk_per_fk_cardinality_per_replicaset #row_size#replicaset_count) / #user_net_speed = \
   = #cluster_time_k#cluster_time_theta + M[#service_time_fk_execute_search_GSI] + (#exec_plan_size_avg + #pk_per_fk_cardinality_per_replicaset #row_size#replicaset_count ) / #user_net_speed,
@@ -1128,9 +1082,7 @@ $
 $
   #random_part_of_tus_GSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
 $
-#aftermath([
-  следовательно:
-])
+следовательно:
 $
   M[#time_user_search_GSI] = M[#random_part_of_tus_GSI] + M[#service_time_coordinate_search_GSI] + (#exec_plan_size + #pk_per_fk_cardinality_per_replicaset #row_size #replicaset_count)/#cluster_net_speed =\
   = #user_time_k#user_time_theta + M[#service_time_coordinate_search_GSI] + (#exec_plan_size + #pk_per_fk_cardinality_per_replicaset #row_size #replicaset_count)/#cluster_net_speed,
@@ -1147,9 +1099,7 @@ $
 $
   #max_subintensity_search_GSI = 1/#time_execute_search_GSI,
 $
-#aftermath([
-  а по формуле (@subintensity-search-GSI), верно, что:
-])
+а по формуле (@subintensity-search-GSI), верно, что:
 $
   #max_intensity_search_GSI = (#max_subintensity_search_GSI #replicaset_count)/k= #replicaset_count/(#time_execute_search_GSI k).
 $
@@ -1198,9 +1148,7 @@ $
   P(#time_user_search_GSI >= #timeout) = integral_0^tau f_X (t) (1 -\
     - [gamma(2#cluster_time_k, frac(tau - t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k) d t + 1 - F_X (tau),
 $
-#aftermath([
-  где $F_X (tau) = integral_0^tau f_X (t) d t$ --- функция распределения суммы $X$.
-])
+где $F_X (tau) = integral_0^tau f_X (t) d t$ --- функция распределения суммы $X$.
 
 В частном случае $#user_time_theta = #cluster_time_theta = theta$ сумма $#random_part_of_tus_GSI + #random_part_of_tce_GSI$ имеет гамма-распределение $Gamma(2#user_time_k + 2#cluster_time_k, theta)$, и плотность $f_X$ записывается в замкнутом виде, что упрощает численное интегрирование.
 
@@ -1212,9 +1160,7 @@ $
 $
   #queue_time_total_search_GSI = 3 #queue_time_execute_search_GSI,
 $ <queue-time-total-GSI>
-#aftermath([
-  так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_search_LSI$, потом еще столько же в исполнителе с искомым вторичным ключом и еще по столько же параллельно на каждом исполнителе.
-])
+так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_search_LSI$, потом еще столько же в исполнителе с искомым вторичным ключом и еще по столько же параллельно на каждом исполнителе.
 
 == Обновление в локальном индексе <lsi-update>
 Алгоритм записи в кластере с такой индексной структурой выглядит следующим образом:
@@ -1297,9 +1243,7 @@ $
   #queue_length_execute_update_LSI &= #load_executor_update_LSI + (#load_executor_update_LSI^2 + #subintensity_update_LSI D[#time_execute_update_LSI])/(2 (1 - #load_executor_update_LSI)) =\
   &= #load_executor_update_LSI + #load_executor_update_LSI^2/(2 (1 - #load_executor_update_LSI)),
 $
-#aftermath([
-  и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
-])
+и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
 $
   #service_time_execute_update_LSI = #queue_length_execute_update_LSI / #intensity_update = #time_execute_update_LSI + (#load_executor_update_LSI #time_execute_update_LSI)/(2 (1 - #load_executor_update_LSI)).
 $
@@ -1331,9 +1275,7 @@ $
 $
   #random_part_of_tus_update_LSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
 $
-#aftermath([
-  следовательно:
-])
+следовательно:
 $
   M[#time_user_update_LSI] = M[#random_part_of_tus_update_LSI] + M[#service_time_coordinate_update_LSI] =\
   = #user_time_k#user_time_theta + M[#service_time_coordinate_update_LSI],
@@ -1350,9 +1292,7 @@ $
 $
   #max_subintensity_update_LSI = 1/#time_execute_update_LSI,
 $
-#aftermath([
-  а по формуле (@subintensity-update-LSI), верно, что:
-])
+а по формуле (@subintensity-update-LSI), верно, что:
 $
   #max_intensity_update_LSI = #max_subintensity_update_LSI #replicaset_count = #replicaset_count/ #time_execute_update_LSI.
 $
@@ -1407,9 +1347,7 @@ $
 $
   #queue_time_total_update_LSI = 2 #queue_time_execute_update_LSI,
 $ <queue-time-total-update-LSI>
-#aftermath([
-  так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_update_LSI$, потом еще столько же в исполнителе.
-])
+так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_update_LSI$, потом еще столько же в исполнителе.
 
 == Обновление в глобальном индексе <gsi-update>
 Алгоритм записи в кластере с такой индексной структурой выглядит следующим образом:
@@ -1497,9 +1435,7 @@ $
   #queue_length_execute_update_GSI &= #load_executor_update_GSI + (#load_executor_update_GSI^2 + #subintensity_update_GSI D[#time_execute_pk_update_GSI])/(2 (1 - #load_executor_update_GSI)) =\
   &= #load_executor_update_GSI + #load_executor_update_GSI^2/(2 (1 - #load_executor_update_GSI)),
 $
-#aftermath([
-  и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
-])
+и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла:
 $
   #service_time_execute_pk_update_GSI = #queue_length_execute_update_GSI / #intensity_update = #time_execute_pk_update_GSI + (#load_executor_update_GSI #time_execute_pk_update_GSI)/(2 (1 - #load_executor_update_GSI)).
 $
@@ -1526,9 +1462,7 @@ $
 $
   #random_part_of_tus_update_GSI = #user_request_time + #user_response_time tilde Gamma(2#user_time_k, #user_time_theta),
 $
-#aftermath([
-  следовательно:
-])
+следовательно:
 $
   M[#time_user_update_GSI] = M[#random_part_of_tus_update_GSI] + M[#service_time_coordinate_update_GSI] =\
   = #user_time_k#user_time_theta + M[#time_coordinate_pk_update_GSI] + M[#time_coordinate_fk_update_GSI],
@@ -1545,9 +1479,7 @@ $
 $
   #max_subintensity_update_GSI = 1/#time_execute_pk_update_GSI,
 $
-#aftermath([
-  а по формуле (@subintensity-update-GSI), верно, что:
-])
+а по формуле (@subintensity-update-GSI), верно, что:
 $
   #max_intensity_update_GSI = #max_subintensity_update_GSI #replicaset_count = #replicaset_count/ #time_execute_pk_update_GSI.
 $
@@ -1603,9 +1535,7 @@ $
 $
   #queue_time_total_update_GSI = 3 #queue_time_execute_update_GSI,
 $ <queue-time-total-update-GSI>
-#aftermath([
-  так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_update_GSI$, потом еще столько же в исполнителе.
-])
+так как сначала заявки ожидает в очереди координатора за $#queue_time_execute_update_GSI$, потом еще столько же в исполнителе.
 
 == Результат расчетов и сравнение
 // Для начала проведем небольшое качественное сравнение различных индексных структур. Стоит сказать, что в данной работе не обсуждена проблема консистентности данных в СУБД, хотя это существенная часть разработки любой распределенной системы.
