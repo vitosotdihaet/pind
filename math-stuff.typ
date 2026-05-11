@@ -32,8 +32,7 @@
 #let btree_order = $m$
 #let btree_max_keys = $2#btree_order - 1$
 #let btree_min_keys = $2/3 (#btree_max_keys)$
-#let btree_full_node_probability = $P_"full"$
-#let btree_full_node_probability_value = $0.81$
+#let btree_node_avg_fullness = $0.81$
 
 
 // COMMON
@@ -55,7 +54,7 @@
 #let intensity_search = $lambda_"search"$
 #let intensity_update = $lambda_"update"$
 #let max_intensity = $lambda^"max"$
-#let queue_time_total = $W^"total"_"q"$
+#let queue_time_total = $W^"total,q"$
 
 // LSI SEARCH
 #let intensity_search_LSI = $lambda_"search,LSI"$
@@ -64,7 +63,7 @@
 #let max_subintensity_search_LSI = $lambda_"search,LSI"^"sub,max"$
 
 #let load_executor_search_LSI = $rho^"executor"_"search,LSI"$
-#let queue_time_total_search_LSI = $W^"total"_"search,q,LSI"$
+#let queue_time_total_search_LSI = $W^"total,q"_"search,LSI"$
 
 #let btree_node_jumps_search_LSI = $log_#btree_order #data_cardinality_per_replicaset$
 #let btree_leaf_jumps_search_LSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
@@ -79,16 +78,17 @@
 
 #let service_time_coordinate_search_LSI = $W^"coordinate"_"search,LSI"$
 #let service_time_execute_search_LSI = $W^"execute"_"search,LSI"$
-#let queue_time_execute_search_LSI = $W^"execute"_"search,q,LSI"$
+#let queue_time_execute_search_LSI = $W^"execute,q"_"search,LSI"$
 #let queue_length_execute_search_LSI = $L^"execute"_"search,LSI"$
 
 #let time_coordinate_search_LSI_ith_right_side = $#cluster_request_time_ith + #exec_plan_size / #cluster_net_speed + #service_time_execute_search_LSI + #cluster_response_time_ith + (#pk_per_fk_cardinality_per_replicaset #row_size) / #cluster_net_speed$
 
-#let random_part_of_tcsi_search_LSI = $Y$
-#let deterministic_part_of_tcsi_search_LSI = $C^"coordinate"$
-#let random_part_of_tss_search_LSI = $V$
-#let random_part_of_tcs_search_LSI = $Z$
-#let deterministic_part_of_tus_search_LSI = $C^"user"$
+#let random_part_of_tcsi_search_LSI = $UU^"c"_i$
+#let deterministic_part_of_tcsi_search_LSI = $CC^"c"$
+#let random_part_of_tcs_search_LSI = $UU^"c"$
+
+#let random_part_of_tss_search_LSI = $UU^"u"$
+#let deterministic_part_of_tus_search_LSI = $CC^"u"$
 
 #let net_reqs_search_LSI_name = $"NR"^"LSI"_"search"$
 
@@ -104,12 +104,12 @@
 
 #let service_time_coordinate_update_LSI = $W^"coordinate"_"update,LSI"$
 #let service_time_execute_update_LSI = $W^"execute"_"update,LSI"$
-#let queue_time_execute_update_LSI = $W^"execute"_"update,q,LSI"$
+#let queue_time_execute_update_LSI = $W^"execute,q"_"update,LSI"$
 
 #let queue_length_execute_update_LSI = $L^"execute"_"update,LSI"$
 
 #let load_executor_update_LSI = $rho^"executor"_"update,LSI"$
-#let queue_time_total_update_LSI = $W^"total"_"update,q,LSI"$
+#let queue_time_total_update_LSI = $W^"total,q"_"update,LSI"$
 #let time_service_update_LSI = $T^" service"_"update,LSI"$
 #let load_update_LSI = $rho_"update,LSI"$
 
@@ -121,10 +121,10 @@
 
 #let time_coordinate_update_LSI_ith_right_side = $#cluster_request_time + #exec_plan_size / #cluster_net_speed + #service_time_execute_update_LSI + #cluster_response_time$
 
-#let random_part_of_tcs_update_LSI = $Y$
-#let deterministic_part_of_tcs_update_LSI = $C^"coordinate"$
-#let random_part_of_tus_update_LSI = $X$
-#let deterministic_part_of_tus_update_LSI = $C^"user"$
+#let random_part_of_tcs_update_LSI = $UU^"c"$
+#let deterministic_part_of_tcs_update_LSI = $CC^"c"$
+#let random_part_of_tus_update_LSI = $UU^"u"$
+#let deterministic_part_of_tus_update_LSI = $CC^"u"$
 
 #let net_reqs_update_LSI_name = $"NR"^"LSI"_"update"$
 #let rps_update_LSI_name = $"RPS"^"LSI"_"update"$
@@ -139,7 +139,7 @@
 #let max_intensity_search_GSI = $lambda_"search,GSI"^"max"$
 
 #let load_executor_search_GSI = $rho^"executor"_"search,GSI"$
-#let queue_time_total_search_GSI = $W^"total"_"search,q,GSI"$
+#let queue_time_total_search_GSI = $W^"total,q"_"search,GSI"$
 
 #let btree_node_jumps_search_GSI = $log_#btree_order #data_cardinality_per_replicaset$
 #let btree_leaf_jumps_search_GSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
@@ -156,7 +156,7 @@
 #let service_time_coordinate_search_GSI = $W^"coordinate"_"search,GSI"$
 #let service_time_execute_search_GSI = $W^"execute"_"search,GSI"$
 #let service_time_fk_execute_search_GSI = $W^"FK-execute"_"search,GSI"$
-#let queue_time_execute_search_GSI = $W^"execute"_"search,q,GSI"$
+#let queue_time_execute_search_GSI = $W^"execute,q"_"search,GSI"$
 
 #let queue_length_execute_search_GSI = $L^"execute"_"search,GSI"$
 
@@ -164,22 +164,22 @@
 
 #let time_fk_execute_search_GSI_ith_right_side_bs = $#cluster_request_time_ith + #exec_plan_size / #cluster_net_speed + #service_time_execute_search_GSI + #cluster_response_time_ith + (#pk_per_fk_cardinality_per_replicaset #row_size) / #cluster_net_speed$
 
-#let random_part_of_tfei_GSI = $U$
-#let deterministic_part_of_tfei_GSI = $C^"FK-execute"$
-#let random_part_of_tfe_GSI = $V$
-#let deterministic_part_of_tfe_GSI = $C^"FK-execute"_"full"$
-#let random_part_of_tce_GSI = $W$
-#let deterministic_part_of_tce_GSI = $C^"coordinate"$
-#let random_part_of_tus_GSI = $X$
-#let deterministic_part_of_tus_GSI = $C^"user"$
+#let random_part_of_tfei_GSI = $UU^"FK"_i$
+#let deterministic_part_of_tfei_GSI = $CC^"FK"_i$
+#let random_part_of_tfe_GSI = $UU^"FK"$
+#let deterministic_part_of_tfe_GSI = $CC^"FK"$
+#let random_part_of_tce_GSI = $UU^"c"$
+#let deterministic_part_of_tce_GSI = $CC^"c"$
+#let random_part_of_tus_GSI = $UU^"u"$
+#let deterministic_part_of_tus_GSI = $CC^"u"$
 
-#let exec_plan_size_avg = $P_"avg"$
+#let random_part_of_tu_and_c_GSI = $UU^"uc"$
 
 #let net_reqs_search_GSI_name = $"NR"^"GSI"_"search"$
 
 // GSI UPDATE
-#let cluster_request_time_pk = $t^"PK-replicaset"_"request"$
-#let cluster_response_time_pk = $t^"PK-replicaset"_"response"$
+#let cluster_request_time_sk = $t^"SK-replicaset"_"request"$
+#let cluster_response_time_sk = $t^"SK-replicaset"_"response"$
 #let cluster_request_time_fk = $t^"FK-replicaset"_"request"$
 #let cluster_response_time_fk = $t^"FK-replicaset"_"response"$
 
@@ -189,20 +189,20 @@
 #let max_subintensity_update_GSI = $lambda_"update,GSI"^"sub,max"$
 
 #let time_user_update_GSI = $T^"user"_"update,GSI"$
-#let time_coordinate_pk_update_GSI = $T^"PK-coordinate"_"update,GSI"$
+#let time_coordinate_sk_update_GSI = $T^"SK-coordinate"_"update,GSI"$
 #let time_coordinate_fk_update_GSI = $T^"FK-coordinate"_"update,GSI"$
-#let time_execute_pk_update_GSI = $T^"PK-execute"_"update,GSI"$
+#let time_execute_sk_update_GSI = $T^"SK-execute"_"update,GSI"$
 #let time_execute_fk_update_GSI = $T^"FK-execute"_"update,GSI"$
 
 #let service_time_coordinate_update_GSI = $W^"coordinate"_"update,GSI"$
-#let service_time_execute_pk_update_GSI = $W^"execute"_"PK-update,GSI"$
+#let service_time_execute_sk_update_GSI = $W^"execute"_"SK-update,GSI"$
 #let service_time_execute_fk_update_GSI = $W^"execute"_"FK-update,GSI"$
-#let queue_time_execute_update_GSI = $W^"execute"_"update,q,GSI"$
+#let queue_time_execute_update_GSI = $W^"execute,q"_"update,GSI"$
 
 #let queue_length_execute_update_GSI = $L^"execute"_"update,GSI"$
 
 #let load_executor_update_GSI = $rho^"executor"_"update,GSI"$
-#let queue_time_total_update_GSI = $W^"total"_"update,q,GSI"$
+#let queue_time_total_update_GSI = $W^"total,q"_"update,GSI"$
 #let time_service_update_GSI = $T^" service"_"update,GSI"$
 #let load_update_GSI = $rho_"update,GSI"$
 
@@ -212,13 +212,13 @@
 #let btree_free_space_before_overflow_long_update_GSI = $#btree_node_split_probability_value_update_GSI (#btree_max_keys)$
 #let btree_free_space_before_overflow_inv_update_GSI = $5.26 / #btree_max_keys$
 
-#let time_execute_pk_update_GSI_right_side = $#cluster_request_time_pk + #exec_plan_size / #cluster_net_speed + #service_time_execute_pk_update_GSI + #cluster_response_time_pk$
+#let time_execute_sk_update_GSI_right_side = $#cluster_request_time_sk + #exec_plan_size / #cluster_net_speed + #service_time_execute_sk_update_GSI + #cluster_response_time_sk$
 #let time_execute_fk_update_GSI_right_side = $#cluster_request_time_fk + #exec_plan_size / #cluster_net_speed + #service_time_execute_fk_update_GSI + #cluster_response_time_fk$
 
-#let random_part_of_tcs_update_GSI = $Y$
-#let deterministic_part_of_tcs_update_GSI = $C^"coordinate"$
-#let random_part_of_tus_update_GSI = $X$
-#let deterministic_part_of_tus_update_GSI = $C^"user"$
+#let random_part_of_tcs_update_GSI = $UU^"c"$
+#let deterministic_part_of_tcs_update_GSI = $CC^"c"$
+#let random_part_of_tus_update_GSI = $UU^"u"$
+#let deterministic_part_of_tus_update_GSI = $CC^"u"$
 
 #let net_reqs_update_GSI_name = $"NR"^"GSI"_"update"$
 #let rps_update_GSI_name = $"RPS"^"GSI"_"update"$
