@@ -8,19 +8,19 @@ import btree
 def time_execute_search_LSI(
     data_cardinality_per_replicaset: int,
     btree_order: int,
-    pk_per_fk_per_cardinality_per_replicaset: int,
+    pk_per_fk_cardinality_per_replicaset: int,
     cpu_frequency: float,
     mem_frequency: float,
 ) -> float:
     return (
-        btree.find_n_keys_by_fk_in_index_comparison_count(
+        btree.find_keys_by_fk_in_index_comparison_count(
             data_cardinality_per_replicaset, btree_order
         )
         / cpu_frequency
-        + btree.find_n_keys_by_fk_in_index_memory_jumps_count(
+        + btree.find_keys_by_fk_in_index_memory_jumps_count(
             data_cardinality_per_replicaset,
             btree_order,
-            pk_per_fk_per_cardinality_per_replicaset,
+            pk_per_fk_cardinality_per_replicaset,
         )
         / mem_frequency
     )
