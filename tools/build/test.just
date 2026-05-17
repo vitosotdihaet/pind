@@ -20,14 +20,16 @@ load index_type operation start_storage="true": (main::_check_arg start_storage 
         just test::_run_storage
     fi
     locust -f load-testing/locustfile.py \
-        --config-path load-testing/configs/example.yaml \
-        --index-type {{ index_type }} \
-        --operation {{ operation }} \
         --spawn-rate 10 \
         --autostart \
-        --users 1600 \
-        --run-time 300s \
+        --autoquit 0 \
+        --html load-testing/results/report.html \
+        --users 160 \
+        --run-time 120s \
         --processes 16 \
+        --config-path load-testing/configs/example.yaml \
+        --operation {{ operation }} \
+        --index-type {{ index_type }} \
         --admin-password {{ env("ADMIN_PASSWORD") }} \
         --psql-address 127.0.0.1:5433
-    # TODO: use config files for locust
+    # TODO: use config files for locust and match them with picodata config files

@@ -1,9 +1,18 @@
+import os
 import random
 import string
+from collections import defaultdict
+from threading import Lock
 
+import matplotlib
+import numpy as np
+
+matplotlib.use("Agg")  # headless backend
 import config
+import matplotlib.pyplot as plt
 import psycopg
 from locust import HttpUser, events
+from locust.runners import MasterRunner, WorkerRunner
 
 
 @events.init_command_line_parser.add_listener
@@ -35,7 +44,139 @@ SEARCH_ENDPOINT = ""
 INSERT_ENDPOINT = ""
 REQUESTS_PER_SECOND = ""
 ROW_SIZE = ""
-target_host = ""
+
+
+_response_times: dict[str, list[float]] = defaultdict(list)
+_response_times_lock = Lock()
+
+
+@events.request.add_listener
+def on_request(
+    request_type,
+    name,
+    response_time,
+    response_length,
+    exception,
+    context,
+    **kwargs,
+):
+    # skip failed requests if you only want successful latencies
+    if exception is not None:
+        return
+    with _response_times_lock:
+        _response_times[name].append(response_time)
+
+
+def _save_histogram(name: str, times: list[float], out_dir: str):
+    if not times:
+        return
+
+    arr = np.array(times, dtype=float)
+
+    # use a sensible upper bound (clip at p99.9 so a few outliers don't squash the plot)
+    upper = np.percentile(arr, 99.999)
+    clipped = arr[arr <= upper]
+
+    # freedman–Diaconis rule for bin width; fall back to 50 bins
+    if len(clipped) > 1:
+        iqr = np.subtract(*np.percentile(clipped, [75, 25]))
+        bin_width = 2 * iqr / (len(clipped) ** (1 / 3)) if iqr > 0 else 0
+        bins = (
+            max(20, int(np.ceil((clipped.max() - clipped.min()) / bin_width)))
+            if bin_width > 0
+            else 50
+        )
+        bins = min(bins, 200)
+    else:
+        bins = 20
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    counts, edges, _ = ax.hist(clipped, bins=bins, edgecolor="black", alpha=0.75)
+
+    # annotate key percentiles
+    for pct, color in [(50, "green"), (95, "orange"), (99, "red")]:
+        val = np.percentile(arr, pct)
+        ax.axvline(
+            val,
+            color=color,
+            linestyle="--",
+            linewidth=1.2,
+            label=f"p{pct} = {val:.1f} ms",
+        )
+
+    ax.set_title(
+        f"Response time histogram — {name}\n"
+        f"n={len(arr)}, mean={arr.mean():.1f} ms, "
+        f"min={arr.min():.1f}, max={arr.max():.1f}"
+    )
+    ax.set_xlabel("Response time (ms)")
+    ax.set_ylabel("Count")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+
+    safe_name = name.strip("/").replace("/", "_") or "root"
+    png_path = os.path.join(out_dir, f"hist_{safe_name}.png")
+    csv_path = os.path.join(out_dir, f"hist_{safe_name}.csv")
+
+    fig.savefig(png_path, dpi=120)
+    plt.close(fig)
+
+    # Also dump raw bin data so you can re-plot later
+    with open(csv_path, "w") as f:
+        f.write("bin_left_ms,bin_right_ms,count\n")
+        for i, c in enumerate(counts):
+            f.write(f"{edges[i]:.3f},{edges[i + 1]:.3f},{int(c)}\n")
+
+    print(f"[histogram] saved {png_path} ({len(arr)} samples)")
+
+
+@events.quitting.add_listener
+def on_quitting(environment, **kwargs):
+    # Only the master (or standalone) should write output to avoid duplicates
+    runner = environment.runner
+    if (
+        runner is not None
+        and getattr(runner, "worker_index", None) is not None
+        and getattr(runner, "worker_index", -1) >= 0
+        and runner.__class__.__name__ == "WorkerRunner"
+    ):
+        return
+
+    out_dir = os.environ.get("LOCUST_HIST_DIR", "load-testing/results")
+    os.makedirs(out_dir, exist_ok=True)
+
+    with _response_times_lock:
+        snapshot = {k: list(v) for k, v in _response_times.items()}
+
+    for name, times in snapshot.items():
+        _save_histogram(name, times, out_dir)
+
+
+@events.init.add_listener
+def setup_messaging(environment, **kwargs):
+    if isinstance(environment.runner, MasterRunner):
+
+        def on_samples(environment, msg, **_):
+            with _response_times_lock:
+                for name, times in msg.data.items():
+                    _response_times[name].extend(times)
+
+        environment.runner.register_message("rt_samples", on_samples)
+
+    if isinstance(environment.runner, WorkerRunner):
+        import gevent
+
+        def report_loop():
+            while True:
+                gevent.sleep(5)
+                with _response_times_lock:
+                    payload = {k: v[:] for k, v in _response_times.items()}
+                    _response_times.clear()
+                if payload:
+                    environment.runner.send_message("rt_samples", payload)
+
+        gevent.spawn(report_loop)
 
 
 def fetch_hosts(psql_address: str, admin_password: str) -> list[str]:
@@ -126,9 +267,3 @@ def insert_task(user: HttpUser):
 
 class LoadUser(HttpUser):
     host = ""
-
-    def wait_time(self):
-        if self.environment.runner and self.environment.runner.user_count:
-            rate_per_user = REQUESTS_PER_SECOND / self.environment.runner.user_count
-            return 1.0 / rate_per_user if rate_per_user > 0 else 0
-        return 0

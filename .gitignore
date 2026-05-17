@@ -2,6 +2,5 @@
 tmp
 .env
 /venv
-*.png
 __pycache__
 math-model-calculations/output.*
