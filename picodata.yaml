@@ -1,17 +1,16 @@
 cluster:
-  name: "pind"
-  tier:
-    default:
-      can_vote: true
-    pind:
-      replication_factor: 1
-  default_replication_factor: 2
-  default_bucket_count: 10
+    name: "pind"
+    tier:
+        default:
+            can_vote: true
+        pind:
+            replication_factor: 1
+    default_replication_factor: 2
+    default_bucket_count: 3000
 
 instance:
-  log:
-    level: warn
-    format: plain
-  memtx:
-    memory: 67108864
-
+    log:
+        level: warn
+        format: plain
+    memtx:
+        memory: 67108864

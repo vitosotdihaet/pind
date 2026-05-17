@@ -1,15 +1,16 @@
 use std::sync::LazyLock;
 
+use serde::Deserialize;
 use shors::transport::{
     Context,
     http::{
-        Request, Response,
+        Request,
         route::{Builder, Route},
         server::Server,
     },
 };
 
-use crate::index::{IndexIdentifier, add_index};
+use crate::index::{Row, insert_gsi, insert_lsi, search_gsi, search_lsi};
 
 thread_local! {
     pub static HTTP_SERVER: LazyLock<Server> = LazyLock::new(Server::new);
@@ -17,43 +18,73 @@ thread_local! {
 
 #[must_use]
 pub fn routes() -> Vec<Route<anyhow::Error>> {
-    let add = Builder::new()
-        .with_method("GET")
-        .with_path("/add/:table_name")
-        .build(|ctx: &mut Context, r: Request| -> anyhow::Result<()> {
-            log::error!("ctx is {ctx:?}, request is {r:?}");
-            let table_name = r.stash.get("table_name").unwrap().to_string();
-            let id =
-                IndexIdentifier::new(table_name, vec![String::from("b")], vec![String::from("a")]);
-            log::error!("id is {id:?}");
-            add_index(&id).unwrap();
-            Ok(())
+    let search_gsi = Builder::new()
+        .with_method("POST")
+        .with_path("/search")
+        .build(
+            |_ctx: &mut Context, r: Request| -> anyhow::Result<Vec<Row>> {
+                #[derive(Deserialize, Debug)]
+                struct SearchValue {
+                    fk: String,
+                }
+
+                let res = r.parse();
+                let value: SearchValue = res?;
+                let rows = search_gsi(&value.fk).unwrap_or_else(|e| {
+                    log::error!("res rows got error: {e:?}");
+                    Vec::default()
+                });
+
+                Ok(rows)
+            },
+        );
+
+    let insert_gsi = Builder::new()
+        .with_method("POST")
+        .with_path("/insert")
+        .build(|_ctx: &mut Context, r: Request| -> anyhow::Result<u64> {
+            let row: Row = r.parse()?;
+            let res = insert_gsi(&row).unwrap_or_else(|e| {
+                log::error!("res insert got error: {e:?}");
+                0
+            });
+
+            Ok(res)
         });
 
-    let search = Builder::new()
-        .with_method("GET")
-        .with_path("/search/:table_name")
-        .build(|ctx: &mut Context, r: Request| -> anyhow::Result<()> {
-            log::error!("ctx is {ctx:?}, request is {r:?}");
-            let table_name = r.stash.get("table_name").unwrap().to_string();
-            let id =
-                IndexIdentifier::new(table_name, vec![String::from("b")], vec![String::from("a")]);
-            // add_index(&id).unwrap();
-            Ok(())
+    let search_lsi = Builder::new()
+        .with_method("POST")
+        .with_path("/search_lsi")
+        .build(
+            |_ctx: &mut Context, r: Request| -> anyhow::Result<Vec<Row>> {
+                #[derive(Deserialize, Debug)]
+                struct SearchValue {
+                    fk: String,
+                }
+
+                let res = r.parse();
+                let value: SearchValue = res?;
+                let rows = search_lsi(&value.fk).unwrap_or_else(|e| {
+                    log::error!("res rows got error: {e:?}");
+                    Vec::default()
+                });
+
+                Ok(rows)
+            },
+        );
+
+    let insert_lsi = Builder::new()
+        .with_method("POST")
+        .with_path("/insert_lsi")
+        .build(|_ctx: &mut Context, r: Request| -> anyhow::Result<u64> {
+            let row: Row = r.parse()?;
+            let res = insert_lsi(&row).unwrap_or_else(|e| {
+                log::error!("res insert got error: {e:?}");
+                0
+            });
+
+            Ok(res)
         });
 
-    let insert = Builder::new()
-        .with_method("GET")
-        .with_path("/insert/:table_name")
-        .build(|ctx: &mut Context, r: Request| -> anyhow::Result<()> {
-            let table_name = r.stash.get("table_name").unwrap().to_string();
-            let id =
-                IndexIdentifier::new(table_name, vec![String::from("b")], vec![String::from("a")]);
-            log::error!("ctx is {ctx:?}, request is {r:?}");
-            log::error!("id is {id:?}");
-            // add_index(&id).unwrap();
-            Ok(())
-        });
-
-    vec![add, search, insert]
+    vec![search_gsi, insert_gsi, search_lsi, insert_lsi]
 }

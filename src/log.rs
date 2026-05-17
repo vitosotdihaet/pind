@@ -8,11 +8,11 @@ const ALL_LOGS_ERROR: bool = true;
 static LOGGER: LazyLock<t_log::TarantoolLogger> = LazyLock::new(|| {
     if ALL_LOGS_ERROR {
         t_log::TarantoolLogger::with_mapping(|level: log::Level| match level {
-            log::Level::Error => t_log::SayLevel::Error,
-            log::Level::Warn => t_log::SayLevel::Error,
-            log::Level::Info => t_log::SayLevel::Error,
-            log::Level::Debug => t_log::SayLevel::Error,
-            log::Level::Trace => t_log::SayLevel::Error,
+            log::Level::Error
+            | log::Level::Warn
+            | log::Level::Info
+            | log::Level::Debug
+            | log::Level::Trace => t_log::SayLevel::Error,
         })
     } else {
         t_log::TarantoolLogger::with_mapping(|level: log::Level| match level {

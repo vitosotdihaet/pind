@@ -34,9 +34,9 @@ impl Service for Pind {
 
         log::info!("registering HTTP handles for pind");
         HTTP_SERVER.with(|srv| {
-            routes()
-                .into_iter()
-                .for_each(|route| srv.register(Box::new(route)));
+            for route in routes() {
+                srv.register(Box::new(route));
+            }
         });
 
         log::info!("registering RPC handles for pind");
