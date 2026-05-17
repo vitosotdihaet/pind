@@ -18,3 +18,5 @@ pip install -r requirements.txt
 ```bash
 just pind
 ```
+
+## Нагрузочное тестирование

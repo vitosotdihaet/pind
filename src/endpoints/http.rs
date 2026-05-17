@@ -20,7 +20,7 @@ thread_local! {
 pub fn routes() -> Vec<Route<anyhow::Error>> {
     let search_gsi = Builder::new()
         .with_method("POST")
-        .with_path("/search")
+        .with_path("/search_gsi")
         .build(
             |_ctx: &mut Context, r: Request| -> anyhow::Result<Vec<Row>> {
                 #[derive(Deserialize, Debug)]
@@ -41,7 +41,7 @@ pub fn routes() -> Vec<Route<anyhow::Error>> {
 
     let insert_gsi = Builder::new()
         .with_method("POST")
-        .with_path("/insert")
+        .with_path("/insert_gsi")
         .build(|_ctx: &mut Context, r: Request| -> anyhow::Result<u64> {
             let row: Row = r.parse()?;
             let res = insert_gsi(&row).unwrap_or_else(|e| {

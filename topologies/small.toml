@@ -1,5 +1,5 @@
 [tier.pind]
-replicasets = 15
+replicasets = 5
 replication_factor = 1
 
 [plugin.pind]

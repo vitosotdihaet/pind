@@ -3,7 +3,7 @@ use picodata_plugin::system::tarantool::log as t_log;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-const ALL_LOGS_ERROR: bool = true;
+const ALL_LOGS_ERROR: bool = false;
 
 static LOGGER: LazyLock<t_log::TarantoolLogger> = LazyLock::new(|| {
     if ALL_LOGS_ERROR {

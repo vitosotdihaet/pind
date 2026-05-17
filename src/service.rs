@@ -27,33 +27,31 @@ impl Service for Pind {
             return Ok(());
         }
 
-        log::info!("pind on_start callback begin");
+        log::debug!("pind on_start callback begin");
         _ = config;
 
         crate::bucket::set_bucket_event_listener();
 
-        log::info!("registering HTTP handles for pind");
         HTTP_SERVER.with(|srv| {
             for route in routes() {
                 srv.register(Box::new(route));
             }
         });
 
-        log::info!("registering RPC handles for pind");
         register_rpc_handles(ctx);
 
         if let Err(e) = ctx.register_metrics_callback(crate::metrics::collect) {
             log::error!("could not start the /metrics endpoint, reason: {e:?}");
         }
 
-        log::info!("pind on_start callback end");
+        log::debug!("pind on_start callback end");
         Ok(())
     }
 
     fn on_stop(&mut self, ctx: &PicoContext) -> CallbackResult<()> {
-        log::info!("pind on_stop callback begin");
+        log::debug!("pind on_stop callback begin");
         _ = ctx;
-        log::info!("pind on_stop callback end");
+        log::debug!("pind on_stop callback end");
         Ok(())
     }
 
@@ -63,26 +61,26 @@ impl Service for Pind {
         new_config: Self::Config,
         old_config: Self::Config,
     ) -> CallbackResult<()> {
-        log::info!("pind on_config_change callback begin");
+        log::debug!("pind on_config_change callback begin");
         _ = ctx;
         _ = new_config;
         _ = old_config;
 
-        log::info!("pind on_config_change callback end");
+        log::debug!("pind on_config_change callback end");
         Ok(())
     }
 
     fn on_leader_change(&mut self, ctx: &PicoContext) -> CallbackResult<()> {
-        log::info!("pind on_leader_change callback begin");
+        log::debug!("pind on_leader_change callback begin");
         _ = ctx;
-        log::info!("pind on_leader_change callback end");
+        log::debug!("pind on_leader_change callback end");
         Ok(())
     }
 
     fn on_health_check(&self, ctx: &PicoContext) -> CallbackResult<()> {
-        log::info!("pind on_health_check callback begin");
+        log::debug!("pind on_health_check callback begin");
         _ = ctx;
-        log::info!("pind on_health_check callback end");
+        log::debug!("pind on_health_check callback end");
         Ok(())
     }
 }

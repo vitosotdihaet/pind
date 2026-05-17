@@ -26,71 +26,6 @@ impl IndexIdentifier {
 const TABLE_NAME: &'static str = "test_table";
 const GSI_NAME: &'static str = "test_table_gsi";
 
-// /// Add an index entry to _pind_indexes, then build the index.
-// pub fn add_index(identifier: &IndexIdentifier) -> Result<(), ()> {
-//     let table_name = format!("{}_gsi", identifier.table_name);
-//     let mut params = Vec::new();
-//     params.push(table_name.into());
-//     params.append(
-//         &mut identifier
-//             .column_names
-//             .clone()
-//             .into_iter()
-//             .map(|c| c.into())
-//             .collect::<Vec<SqlValue>>(),
-//     );
-//     params.append(
-//         &mut identifier
-//             .primary_key_column_names
-//             .clone()
-//             .into_iter()
-//             .map(|c| c.into())
-//             .collect::<Vec<SqlValue>>(),
-//     );
-//     params.append(
-//         &mut identifier
-//             .column_names
-//             .clone()
-//             .into_iter()
-//             .map(|c| c.into())
-//             .collect::<Vec<SqlValue>>(),
-//     );
-
-//     let columns_string = identifier
-//         .column_names
-//         .iter()
-//         .map(|_| String::from("? int"))
-//         .collect::<Vec<_>>()
-//         .join(", ");
-
-//     let primary_key_string = identifier
-//         .primary_key_column_names
-//         .iter()
-//         .map(|_| String::from("?"))
-//         .collect::<Vec<_>>()
-//         .join(", ");
-
-//     let columns_string_no_types = identifier
-//         .column_names
-//         .iter()
-//         .map(|_| String::from("?"))
-//         .collect::<Vec<_>>()
-//         .join(", ");
-
-//     let query = format!(
-//         r#"CREATE TABLE IF NOT EXISTS ? ({}, primary key ({})) distributed by ({}) in tier pind;"#,
-//         columns_string, primary_key_string, columns_string_no_types
-//     );
-//     log::debug!("query is {query}");
-
-//     let q = picodata_plugin::sql::query_raw(query.as_str(), params);
-
-//     log::debug!("q is {q:#?}");
-//     q.unwrap();
-
-//     Ok(())
-// }
-
 #[derive(Deserialize, Debug)]
 pub struct PkSk {
     pk: String,
@@ -114,6 +49,9 @@ pub fn search_gsi(fk: &str) -> anyhow::Result<Vec<Row>> {
         .collect();
 
     log::debug!("got pksks = {pksks:?}");
+    if pksks.is_empty() {
+        return Ok(vec![]);
+    }
 
     let where_template = String::from("(pk = ? AND sk = ?)");
 
