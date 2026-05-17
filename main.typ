@@ -690,14 +690,14 @@ $ <load-executor-search-LSI>
 
 Исполнитель справляется с нагрузкой при $#load_executor_search_LSI < 1$.
 
-По формуле Полячека---Хинчина рассчитаем среднее количество заявок в исполнителе (количество заявок в очереди и ныне обслуживающихся):
+По формуле Полячека-Хинчина рассчитаем среднее количество заявок в исполнителе (количество заявок в очереди и ныне обслуживающихся):
 $
-  #queue_length_execute_search_LSI &= #load_executor_search_LSI + (#load_executor_search_LSI^2 + #subintensity_search_LSI D[#time_execute_search_LSI])/(2 (1 - #load_executor_search_LSI)) =\
+  #queue_length_execute_search_LSI &= #load_executor_search_LSI + (#load_executor_search_LSI^2 + #subintensity_search_LSI^2 D[#time_execute_search_LSI])/(2 (1 - #load_executor_search_LSI)) =\
   &= #load_executor_search_LSI + #load_executor_search_LSI^2/(2 (1 - #load_executor_search_LSI)),
 $ <Pollaczek-Khinchin-search-LSI>
 и среднее время ожидания зявки в исполнителе в соответствии c законом Литтла, приведенным в @rozenberg1965chtoteoriya @shortle2018fundamentals:
 $
-  #service_time_execute_search_LSI = #queue_length_execute_search_LSI / #intensity_search = #time_execute_search_LSI + (#load_executor_search_LSI #time_execute_search_LSI)/(2 (1 - #load_executor_search_LSI)).
+  #service_time_execute_search_LSI = #queue_length_execute_search_LSI / #subintensity_search_LSI = #time_execute_search_LSI + (#load_executor_search_LSI #time_execute_search_LSI)/(2 (1 - #load_executor_search_LSI)).
 $
 
 Время, проведенное в очереди равно времени проведенному в системе без времени обслуживания заявки, тогда:
@@ -795,12 +795,6 @@ $ <queue-time-total-LSI>
 $
   P(#time_user_search_LSI >= #timeout).
 $
-
-Время ожидания пользователя $#time_user_search_LSI$ является суммой независимых случайной и детерминированной частей:
-$
-  #time_user_search_LSI = #random_part_of_tss_search_LSI + #service_time_coordinate_search_LSI + (#query_size + #pk_per_fk_cardinality_per_replicaset #replicaset_count #row_size) / #user_net_speed,
-$
-где $#service_time_coordinate_search_LSI$ равна $#queue_time_execute_search_LSI + #time_coordinate_search_LSI$.
 
 Обозначим детерминированную часть времени ожидания пользователя как $#deterministic_part_of_tus_search_LSI$. Она рассчитывается по следующей формуле:
 $
@@ -1255,7 +1249,7 @@ $
   = #user_time_k#user_time_theta^2 + D[#time_coordinate_update_LSI].
 $
 
-== Расчет параметров эффективности
+=== Расчет показателей эффективности
 Максимальное количество запросов в секунду достигается при максимальной загрузке системы. Единственным ограничивающим фактором системы является время обработки заявки исполнителем $#time_execute_update_LSI$.
 
 Для устойчивости системы, загрузка системы $#load_executor_update_LSI$ должна не превышать единицу. Максимальная нагрузка системы рассчитывается по следующей формуле:
@@ -1420,7 +1414,7 @@ $
   = #user_time_k#user_time_theta^2 + 2D[#time_coordinate_sk_update_GSI].
 $
 
-== Расчет параметров эффективности
+=== Расчет показателей эффективности
 Максимальное количество запросов в секунду достигается при максимальной загрузке системы. Так как мы договорились, что по факту работа на координаторе не учитывается в модели, то на него можно подать бесконечную нагрузку. Тогда единственным ограничивающим фактором системы является время обработки заявки исполнителем $#time_execute_sk_update_GSI$.
 
 Для устойчивости системы, загрузка системы $#load_executor_update_GSI$ должна не превышать единицу, значит максимальная нагрузка системы рассчитывается по следующей формуле:
@@ -1981,7 +1975,7 @@ $
 + обработка результатов, вычисление метрик, сравнение с целевыми значениями.
 
 == Критерии приемки
-Плагин считается успешно прошедшим испытания, если все проверяемые метрики из таблицы @test-metrics удовлетворяют целевым значениям. Допускаются незначительные отклонения (в пределах погрешности измерений), но они должны быть задокументированы и обоснованы.
+Плагин считается успешно прошедшим испытания, если все проверяемые метрики из таблицы @test-metrics удовлетворяют целевым значениям. Допускаются незначительные отклонения, но они должны быть задокументированы и обоснованы.
 
 // == Модель функционирования системы тестирования
 // === Контекстная диаграмма
