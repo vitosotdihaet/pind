@@ -1,19 +1,21 @@
 // an equation without numbering
 #let nonum_eq(eq) = math.equation(block: true, numbering: none, eq)
 
-// define variable names
-#let iter_i = $i = overline(1..N)$
-#let iter_i_to_k = $i = overline(1..k)$
-
 // math model parameters
 #let replicaset_count = $N$
 #let data_cardinality = $D$
 #let row_size = $r$
+#let replicaset_count_with_fk = $H$
 #let fk_cardinality = $K$
+#let fk_cardinality_per_replicaset = $k$
 #let pk_per_fk_cardinality_per_replicaset = $s$
 #let pk_per_fk_cardinality_per_replicaset_ith = $s_i$
 // fk_copy_count_per_replicaset = search_data_cardinality / replicaset_count
 #let data_cardinality_per_replicaset = $d$
+
+// define variable names
+#let iter_i = $i = overline(1..#replicaset_count)$
+#let iter_i_to_k = $i = overline(1..#replicaset_count_with_fk)$
 
 #let cpu_frequency = $f_"cpu"$
 #let mem_frequency = $f_"mem"$
@@ -67,7 +69,7 @@
 
 #let btree_node_jumps_search_LSI = $log_#btree_order #data_cardinality_per_replicaset$
 #let btree_leaf_jumps_search_LSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
-#let btree_jumps_total_search_LSI = $#btree_node_jumps_search_LSI + 3 dot (#pk_per_fk_cardinality_per_replicaset - 1) / (4m - 2) + 1$
+#let btree_jumps_total_search_LSI = $#btree_node_jumps_search_LSI + 3 dot (#pk_per_fk_cardinality_per_replicaset - 1) / (4#btree_order - 2) + 1$
 #let btree_search_ops_node_search_LSI = $log_2 (2#btree_order - 1)$
 #let btree_search_ops_total_search_LSI = $#btree_node_jumps_search_LSI #btree_search_ops_node_search_LSI$
 
@@ -142,15 +144,18 @@
 #let queue_time_total_search_GSI = $W^"total,q"_"search,GSI"$
 
 #let btree_node_jumps_search_GSI = $log_#btree_order #data_cardinality_per_replicaset$
-#let btree_leaf_jumps_search_GSI = $(#pk_per_fk_cardinality_per_replicaset - 1) / #btree_min_keys$
-#let btree_jumps_total_search_GSI = $#btree_node_jumps_search_GSI + 3 dot (#pk_per_fk_cardinality_per_replicaset - 1) / (4m - 2) + 1$
 #let btree_search_ops_node_search_GSI = $log_2 (2#btree_order - 1)$
 #let btree_search_ops_total_search_GSI = $#btree_node_jumps_search_GSI #btree_search_ops_node_search_GSI$
 
+#let btree_node_jumps_search_GSI_fk = $log_#btree_order #data_cardinality_per_replicaset$
+#let btree_jumps_total_search_GSI_fk = $#btree_node_jumps_search_GSI_fk + 3 dot (#pk_per_fk_cardinality_per_replicaset - 1) / (4#btree_order - 2) + 1$
+#let btree_search_ops_node_search_GSI_fk = $log_2 (2#btree_order - 1)$
+#let btree_search_ops_total_search_GSI_fk = $#btree_node_jumps_search_GSI #btree_search_ops_node_search_GSI_fk$
+
 #let time_user_search_GSI = $T^"user"_"search,GSI"$
 #let time_coordinate_search_GSI = $T^"coordinate"_"search,GSI"$
-#let time_fk_execute_search_GSI = $T^"FK-execute"_"search,GSI"$
-#let time_fk_execute_search_GSI_ith = $T^"FK-execute"_("search,GSI", i)$
+#let time_execute_fk_search_GSI = $T^"FK-execute"_"search,GSI"$
+#let time_execute_fk_search_GSI_ith = $T^"FK-execute"_("search,GSI", i)$
 #let time_execute_search_GSI = $T^"execute"_"search,GSI"$
 
 #let service_time_coordinate_search_GSI = $W^"coordinate"_"search,GSI"$

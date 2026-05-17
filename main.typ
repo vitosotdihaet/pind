@@ -911,20 +911,20 @@ $ 6 <= #net_reqs_search_GSI_name <= 2 k + 4, $ <gsi-search-net-reqs>
 
   Время ожидания ответа от исполнителя с искомым вторичным ключом $#service_time_fk_execute_search_GSI$ является случайной величиной и рассчитывается по следующей формуле:
   $
-    #service_time_fk_execute_search_GSI = #queue_time_execute_search_GSI + #time_fk_execute_search_GSI + max_#iter_i_to_k [#time_fk_execute_search_GSI_ith] =\
-    = #queue_time_execute_search_GSI + #time_fk_execute_search_GSI +\
+    #service_time_fk_execute_search_GSI = #queue_time_execute_search_GSI + #time_execute_fk_search_GSI + max_#iter_i_to_k [#time_execute_fk_search_GSI_ith] =\
+    = #queue_time_execute_search_GSI + #time_execute_fk_search_GSI +\
     + max_#iter_i_to_k [ #time_fk_execute_search_GSI_ith_right_side ],
   $
-  где $#queue_time_execute_search_GSI$ --- время ожидания запроса в очереди исполнителя; $#time_fk_execute_search_GSI$ --- время поиска первичных ключей в исполнителе со вторичными ключами; $#time_fk_execute_search_GSI_ith$ --- время ожидания ответа от исполнителя под номером $i$; $#cluster_request_time_ith$ и $#cluster_response_time_ith$ --- времена задержки передачи запроса между координатором и исполнителем под номером $i$ по сети; $#exec_plan_size_ith$ --- размер плана исполнения для исполнителя под номером $i$; $#cluster_net_speed$ --- скорость передачи данных между узлами СУБД; $#service_time_execute_search_GSI$ --- время ожидания обработки запроса исполнителем; $#pk_per_fk_cardinality_per_replicaset_ith$ --- количество записей с искомым вторичным ключом на наборе реплик; $#row_size$ --- размер одной записи; $k <= #replicaset_count$ --- количество наборов реплик, на которых распологаются первичные ключи.
+  где $#queue_time_execute_search_GSI$ --- время ожидания запроса в очереди исполнителя; $#time_execute_fk_search_GSI$ --- время поиска первичных ключей в исполнителе со вторичными ключами; $#time_execute_fk_search_GSI_ith$ --- время ожидания ответа от исполнителя под номером $i$; $#cluster_request_time_ith$ и $#cluster_response_time_ith$ --- времена задержки передачи запроса между координатором и исполнителем под номером $i$ по сети; $#exec_plan_size_ith$ --- размер плана исполнения для исполнителя под номером $i$; $#cluster_net_speed$ --- скорость передачи данных между узлами СУБД; $#service_time_execute_search_GSI$ --- время ожидания обработки запроса исполнителем; $#pk_per_fk_cardinality_per_replicaset_ith$ --- количество записей с искомым вторичным ключом на наборе реплик; $#row_size$ --- размер одной записи; $k <= #replicaset_count$ --- количество наборов реплик, на которых распологаются первичные ключи.
 ]
 
 #proof[
 
   Для начала рассмотрим время, которое проводится исключительно на самом исполнителе со вторичными ключами.
 
-  Запрос сначала попадает в очередь исполнителя и находится там $#queue_time_execute_search_GSI$ секунд. После этого происходит поиск вторичных ключей в B+\*-дереве за $#time_fk_execute_search_GSI$.
+  Запрос сначала попадает в очередь исполнителя и находится там $#queue_time_execute_search_GSI$ секунд. После этого происходит поиск вторичных ключей в B+\*-дереве за $#time_execute_fk_search_GSI$.
 
-  Итого, на координаторе заявка обрабатывается $#queue_time_execute_search_GSI + #time_fk_execute_search_GSI$ секунд, далее он делегирует работу исполнителям. Рассмотрим сколько времени занимает обработка поиска на исполнителях.
+  Итого, на координаторе заявка обрабатывается $#queue_time_execute_search_GSI + #time_execute_fk_search_GSI$ секунд, далее он делегирует работу исполнителям. Рассмотрим сколько времени занимает обработка поиска на исполнителях.
 
   Каждому исполнителю составляется отдельный план запроса $#exec_plan_size_ith$. Он отправляется каждому исполнителю по сети, которых всего $k$ штук --- ключей сегментирования может быть меньше чем наборов реплик в кластере, и несколько ключей сегментирования может быть на одном наборе реплик. Мы будем моделировать $k$ как случайную величину.
 
@@ -940,62 +940,65 @@ $ 6 <= #net_reqs_search_GSI_name <= 2 k + 4, $ <gsi-search-net-reqs>
   $
     #time_fk_execute_search_GSI_ith_right_side,
   $
-  которую мы обозначим $#time_fk_execute_search_GSI_ith$.
+  которую мы обозначим $#time_execute_fk_search_GSI_ith$.
 
-  Исполнитель со вторичным ключом должен дождаться ответа от всех исполнителей, чтобы вернуть объединенный результат пользователю, так что время ожидания исполнителей равно времени ожидания самого долгого исполнителя, что является максимумом среди всех $#time_fk_execute_search_GSI_ith$.
+  Исполнитель со вторичным ключом должен дождаться ответа от всех исполнителей, чтобы вернуть объединенный результат пользователю, так что время ожидания исполнителей равно времени ожидания самого долгого исполнителя, что является максимумом среди всех $#time_execute_fk_search_GSI_ith$.
 
   Итого, время ожидания исполнения запроса исполнителем со вторичным ключом $#service_time_fk_execute_search_GSI$ рассчитывается по следующей формуле:
   $
-    #service_time_fk_execute_search_GSI = #queue_time_execute_search_GSI + #time_fk_execute_search_GSI + max_#iter_i_to_k [#time_fk_execute_search_GSI_ith] =\
-    = #queue_time_execute_search_GSI + #time_fk_execute_search_GSI +\
+    #service_time_fk_execute_search_GSI = #queue_time_execute_search_GSI + #time_execute_fk_search_GSI + max_#iter_i_to_k [#time_execute_fk_search_GSI_ith] =\
+    = #queue_time_execute_search_GSI + #time_execute_fk_search_GSI +\
     + max_#iter_i_to_k [ #time_fk_execute_search_GSI_ith_right_side ],
   $
 
   В правой части равенства присутствуют случайные величины, так что и левая часть является случайной величиной.
 ]
 
-Так как один пользовательский запрос превращается в $k$ запросов для исполнителей, то интенсивность потока, поступающих в исполнителей рассчитывается по следующей формуле:
-$ #subintensity_search_GSI = (#intensity_search_GSI k) / #replicaset_count. $ <subintensity-search-GSI>
-
-Рассчитаем чему равно $#time_execute_search_GSI$. Поиск $n$ вразнобой-идущих ключей занимает в $n$ раз дольше времени, чем поиск одного ключа, то есть совершается $n #btree_node_jumps_search_GSI$ переходов по указателем и $n #btree_search_ops_total_search_GSI$ операций сравнения.
-
-Тогда, $#time_execute_search_GSI$ рассчитывается по следующей формуле:
+Так как один пользовательский запрос превращается в $#replicaset_count_with_fk$ запросов для исполнителей, и в один запрос исполнителю со вторичными ключами, то интенсивность потока, поступающих в исполнителя рассчитывается по следующей формуле:
 $
-  #time_execute_search_GSI = (n #btree_search_ops_total_search_GSI) / #cpu_frequency + (n #btree_node_jumps_search_GSI) / #mem_frequency
+  #subintensity_search_GSI = (#intensity_search_GSI (#replicaset_count_with_fk + 1)) / #replicaset_count.
+$ <subintensity-search-GSI>
+
+// TODO поменять нахххх
+Для удобства возьмем средние значения для плана исполнения и найденного количества данных, то есть:
 $
-и является детерминированной величиной.
+  #exec_plan_size_ith = #exec_plan_size, #pk_per_fk_cardinality_per_replicaset_ith = #pk_per_fk_cardinality_per_replicaset.
+$
+
+Рассчитаем чему равно $#time_execute_search_GSI$. Поиск $#pk_per_fk_cardinality_per_replicaset$ вразнобой-идущих ключей занимает в $#pk_per_fk_cardinality_per_replicaset$ раз дольше времени, чем поиск одного ключа, то есть совершается $#pk_per_fk_cardinality_per_replicaset #btree_node_jumps_search_GSI$ переходов по указателем и $n #btree_search_ops_total_search_GSI$ операций сравнения. Тогда:
+$
+  #time_execute_search_GSI = (#pk_per_fk_cardinality_per_replicaset #btree_search_ops_total_search_GSI) / #cpu_frequency + (#pk_per_fk_cardinality_per_replicaset #btree_node_jumps_search_GSI) / #mem_frequency.
+$
+
+Время поиска на исполнителе со вторичными ключами $#time_execute_fk_search_GSI$ записей рассчитывается так же как и для поиска в ЛВИ:
+$
+  #time_execute_fk_search_GSI = #btree_search_ops_total_search_GSI_fk / #cpu_frequency + #btree_jumps_total_search_GSI_fk / #mem_frequency
+$
 
 Отсюда нагрузка на исполнителя вычисляется по следующей формуле:
-$ #load_executor_search_GSI = #time_execute_search_GSI #subintensity_search_GSI. $ <load-executor-search-GSI>
+$
+  #load_executor_search_GSI = (#time_execute_search_GSI + #time_execute_fk_search_GSI) #subintensity_search_GSI.
+$ <load-executor-search-GSI>
 
 Для вычисления времени обслуживания заявки и времени ожидания в очереди вновь воспользуемся формулой Полячека-Хинчина по аналогии с формулой (@Pollaczek-Khinchin-search-LSI):
 $
-  #service_time_execute_search_GSI = #time_execute_search_GSI + (#load_executor_search_GSI #time_execute_search_GSI)/(2 (1 - #load_executor_search_GSI)),
+  #service_time_execute_search_GSI = #time_execute_search_GSI + #time_execute_fk_search_GSI +\ + (#load_executor_search_GSI (#time_execute_search_GSI + #time_execute_fk_search_GSI))/(2 (1 - #load_executor_search_GSI)),
 $
 $
-  #queue_time_execute_search_GSI = (#load_executor_search_GSI #time_execute_search_GSI)/(2 (1 - #load_executor_search_GSI)).
+  #queue_time_execute_search_GSI = (#load_executor_search_GSI (#time_execute_search_GSI + #time_execute_fk_search_GSI))/(2 (1 - #load_executor_search_GSI)).
 $
 
 Оценим время работы исполнителя со вторичным ключом, связанное с одним исполнителем:
 $
-  #time_fk_execute_search_GSI_ith = #time_fk_execute_search_GSI_ith_right_side.
+  #time_execute_fk_search_GSI_ith = #time_fk_execute_search_GSI_ith_right_side_bs.
 $ <time-fk-execute-search-GSI-ith-eq-time-fk-execute-search-GSI-ith-right-side>
 
-// TODO поменять нахххх
-Для удобства, возьмем средние значения для плана исполнения и найденного количества данных, то есть:
-$ #exec_plan_size_ith = #exec_plan_size, $
-$ #pk_per_fk_cardinality_per_replicaset_ith = #pk_per_fk_cardinality_per_replicaset, $
-тогда, формула (@time-fk-execute-search-GSI-ith-eq-time-fk-execute-search-GSI-ith-right-side) примет вид:
-$
-  #time_fk_execute_search_GSI_ith = #time_fk_execute_search_GSI_ith_right_side_bs.
-$
-
-Случайную часть $#time_fk_execute_search_GSI_ith$ обозначим  $#random_part_of_tfei_GSI$, а детерминированную --- $#deterministic_part_of_tfei_GSI$:
+Случайную часть $#time_execute_fk_search_GSI_ith$ обозначим  $#random_part_of_tfei_GSI$, а детерминированную --- $#deterministic_part_of_tfei_GSI$:
 $
   #deterministic_part_of_tfei_GSI = #service_time_execute_search_GSI + (#exec_plan_size + #pk_per_fk_cardinality_per_replicaset #row_size)/ #cluster_net_speed,
 $
 $
-  #random_part_of_tfei_GSI = #time_fk_execute_search_GSI_ith - #deterministic_part_of_tfei_GSI tilde Gamma(2#cluster_time_k, #cluster_time_theta).
+  #random_part_of_tfei_GSI = #time_execute_fk_search_GSI_ith - #deterministic_part_of_tfei_GSI tilde Gamma(2#cluster_time_k, #cluster_time_theta).
 $
 
 Следовательно функция распределения равна:
@@ -1003,40 +1006,40 @@ $
   F_#random_part_of_tfei_GSI (t) = P(#random_part_of_tfei_GSI <= t) = gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k).
 $
 
-Дальнейшие рассуждения по поводу $#time_fk_execute_search_GSI$ аналогичны рассуждениям для $#time_coordinate_search_LSI$, за исключением добавления времени поиска в B+\*-дереве и взятии максимума не из $#replicaset_count$ значений, а из $k$.
+Дальнейшие рассуждения по поводу $#time_execute_fk_search_GSI$ аналогичны рассуждениям для $#time_coordinate_search_LSI$, за исключением добавления времени поиска в B+\*-дереве и взятии максимума не из $#replicaset_count$ значений, а из $#replicaset_count_with_fk$.
 
-Случайную часть $#time_fk_execute_search_GSI$ обозначим $#random_part_of_tfe_GSI$, неслучайную часть обозначим $#deterministic_part_of_tfe_GSI$. Максимум среди одинаковых неслучайных величин $#deterministic_part_of_tfei_GSI$ равен самому себе:
+Случайную часть $#time_execute_fk_search_GSI$ обозначим $#random_part_of_tfe_GSI$, неслучайную часть обозначим $#deterministic_part_of_tfe_GSI$. Максимум среди одинаковых неслучайных величин $#deterministic_part_of_tfei_GSI$ равен самому себе:
 $
-  #deterministic_part_of_tfe_GSI = #deterministic_part_of_tfei_GSI + #time_fk_execute_search_GSI
+  #deterministic_part_of_tfe_GSI = #deterministic_part_of_tfei_GSI + #time_execute_fk_search_GSI
 $
 $
-  #random_part_of_tfe_GSI = #time_fk_execute_search_GSI - #deterministic_part_of_tfe_GSI
+  #random_part_of_tfe_GSI = #time_execute_fk_search_GSI - #deterministic_part_of_tfe_GSI
 $
 значит, функция распределения $#random_part_of_tfe_GSI$ равна:
 $
-  F_#random_part_of_tfe_GSI (t) = [F_#random_part_of_tfei_GSI (t)]^k = [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k,
+  F_#random_part_of_tfe_GSI (t) = [F_#random_part_of_tfei_GSI (t)]^#replicaset_count_with_fk = [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^#replicaset_count_with_fk,
 $
-что позволяет нам численно найти моменты $#time_fk_execute_search_GSI$ через функцию выживания @ross2019first:
+что позволяет нам численно найти моменты $#time_execute_fk_search_GSI$ через функцию выживания @ross2019first:
 $
-  M[#random_part_of_tfe_GSI] = integral_0^infinity (1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k) d t,
-$
-$
-  M[#random_part_of_tfe_GSI^2] = integral_0^infinity 2t(1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k) d t,
+  M[#random_part_of_tfe_GSI] = integral_0^infinity (1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^#replicaset_count_with_fk) d t,
 $
 $
-  M[#time_fk_execute_search_GSI] = M[#random_part_of_tfe_GSI] + #deterministic_part_of_tfe_GSI,
+  M[#random_part_of_tfe_GSI^2] = integral_0^infinity 2t(1 - [gamma(2#cluster_time_k, frac(t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^#replicaset_count_with_fk) d t,
 $
 $
-  D[#time_fk_execute_search_GSI] = D[#random_part_of_tfe_GSI] = M[#random_part_of_tfe_GSI^2] - (M[#random_part_of_tfe_GSI])^2.
+  M[#time_execute_fk_search_GSI] = M[#random_part_of_tfe_GSI] + #deterministic_part_of_tfe_GSI,
+$
+$
+  D[#time_execute_fk_search_GSI] = D[#random_part_of_tfe_GSI] = M[#random_part_of_tfe_GSI^2] - (M[#random_part_of_tfe_GSI])^2.
 $
 
 
 В свою очередь:
 $
-  M[#service_time_fk_execute_search_GSI] = #queue_time_execute_search_GSI + M[#time_fk_execute_search_GSI],
+  M[#service_time_fk_execute_search_GSI] = #queue_time_execute_search_GSI + M[#time_execute_fk_search_GSI],
 $
 $
-  D[#service_time_fk_execute_search_GSI] = D[#time_fk_execute_search_GSI]
+  D[#service_time_fk_execute_search_GSI] = D[#time_execute_fk_search_GSI]
 $
 
 Время задержек в $#time_coordinate_search_GSI$, обозначим за $#random_part_of_tce_GSI$, тогда:
@@ -1081,7 +1084,7 @@ $
 $
 а по формуле (@subintensity-search-GSI), верно, что:
 $
-  #max_intensity_search_GSI = (#max_subintensity_search_GSI #replicaset_count)/k= #replicaset_count/(#time_execute_search_GSI k).
+  #max_intensity_search_GSI = (#max_subintensity_search_GSI #replicaset_count)/#replicaset_count_with_fk= #replicaset_count/(#time_execute_search_GSI #replicaset_count_with_fk).
 $
 
 Среднее время обслуживания заявки равняется $M[#time_user_search_GSI]$.
@@ -1103,7 +1106,7 @@ $
 $
   #time_user_search_GSI - #deterministic_part_of_tus_GSI = #random_part_of_tus_GSI + #random_part_of_tce_GSI + #random_part_of_tfe_GSI,
 $
-где $#random_part_of_tus_GSI tilde Gamma(2#user_time_k, #user_time_theta)$ --- сетевые задержки между пользователем и координатором; $#random_part_of_tce_GSI tilde Gamma(2#cluster_time_k, #cluster_time_theta)$ --- сетевые задержки между координатором и исполнителем со вторичным ключом; $#random_part_of_tfe_GSI$ --- максимум $k$ независимых одинаково распределённых случайных величин с функцией распределения $F_#random_part_of_tfe_GSI (t)$.
+где $#random_part_of_tus_GSI tilde Gamma(2#user_time_k, #user_time_theta)$ --- сетевые задержки между пользователем и координатором; $#random_part_of_tce_GSI tilde Gamma(2#cluster_time_k, #cluster_time_theta)$ --- сетевые задержки между координатором и исполнителем со вторичным ключом; $#random_part_of_tfe_GSI$ --- максимум $#replicaset_count_with_fk$ независимых одинаково распределённых случайных величин с функцией распределения $F_#random_part_of_tfe_GSI (t)$.
 
 Обозначим $tau = #timeout - #deterministic_part_of_tus_GSI$. Тогда:
 $
@@ -1133,7 +1136,7 @@ $
 Подставляя выражение для $F_#random_part_of_tfe_GSI$:
 $
   P(#time_user_search_GSI >= #timeout) =\
-  = integral_0^tau f_#random_part_of_tu_and_c_GSI (t) (1 - [gamma(2#cluster_time_k, frac(tau - t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^k) d t + 1 - F_#random_part_of_tu_and_c_GSI (tau),
+  = integral_0^tau f_#random_part_of_tu_and_c_GSI (t) (1 - [gamma(2#cluster_time_k, frac(tau - t, #cluster_time_theta, style: "horizontal")) / Gamma(2#cluster_time_k)]^#replicaset_count_with_fk) d t + 1 - F_#random_part_of_tu_and_c_GSI (tau),
 $
 где $F_#random_part_of_tu_and_c_GSI (tau) = integral_0^tau f_#random_part_of_tu_and_c_GSI (t) d t$ --- функция распределения суммы $#random_part_of_tu_and_c_GSI$.
 
