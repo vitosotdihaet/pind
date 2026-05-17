@@ -155,7 +155,8 @@
 #let time_user_search_GSI = $T^"user"_"search,GSI"$
 #let time_coordinate_search_GSI = $T^"coordinate"_"search,GSI"$
 #let time_execute_fk_search_GSI = $T^"FK-execute"_"search,GSI"$
-#let time_execute_fk_search_GSI_ith = $T^"FK-execute"_("search,GSI", i)$
+#let time_execute_fk_subsearch_GSI = $T^"FK-execute"_"subsearch,GSI"$
+#let time_execute_fk_subsearch_GSI_ith = $T^"FK-execute"_("subsearch,GSI", i)$
 #let time_execute_search_GSI = $T^"execute"_"search,GSI"$
 
 #let service_time_coordinate_search_GSI = $W^"coordinate"_"search,GSI"$
