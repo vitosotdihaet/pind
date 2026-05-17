@@ -22,13 +22,29 @@ def find_keys_by_fk_in_index_comparison_count(
 
 
 def find_keys_by_fk_in_index_memory_jumps_count(
-    number_of_keys: int, tree_order: int, pk_per_fk_per_cardinality_per_replicaset: int
+    number_of_keys: int, tree_order: int, pk_per_fk_cardinality_per_replicaset: int
 ) -> int:
     return (
         ceil(log(number_of_keys, tree_order))
         + ceil(
-            (pk_per_fk_per_cardinality_per_replicaset - 1)
+            (pk_per_fk_cardinality_per_replicaset - 1)
             / min_key_count_in_leaf(tree_order)
         )
         + 1
     )
+
+
+def find_keys_by_pk_in_index_comparison_count(
+    total_keys: int, tree_order: int, pk_per_fk_cardinality_per_replicaset: int
+) -> int:
+    return (
+        pk_per_fk_cardinality_per_replicaset
+        * ceil(log(total_keys, tree_order))
+        * ceil(log(max_key_count_in_node(tree_order), 2))
+    )
+
+
+def find_keys_by_pk_in_index_memory_jumps_count(
+    number_of_keys: int, tree_order: int, pk_per_fk_cardinality_per_replicaset: int
+) -> int:
+    return pk_per_fk_cardinality_per_replicaset * ceil(log(number_of_keys, tree_order))

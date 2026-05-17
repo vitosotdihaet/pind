@@ -1,9 +1,10 @@
-from scipy.integrate import quad
+import scipy
+import scipy.integrate
 from scipy.special import gammainc, gammaincc
 from scipy.stats import gamma as gamma_dist
 
 
-def prob_timeout(
+def prob_timeout_search_LSI(
     timeout,
     user_time_k,
     user_time_theta,
@@ -17,11 +18,11 @@ def prob_timeout(
     replicaset_count,
     row_size,
     user_net_speed,
-):
+) -> float:
     """
     Вычисляет P(#time_user_search_LSI >= #timeout).
     """
-    # 1. Детерминированная часть
+    # детерминированная часть
     net_delay = (
         query_size + pk_per_fk_card * replicaset_count * row_size
     ) / user_net_speed
@@ -32,40 +33,118 @@ def prob_timeout(
     if tau <= 0:
         return 1.0
 
-    # 2. Параметры гамма-распределений
-    alpha1 = 2 * user_time_k
+    k1 = 2 * user_time_k
     theta1 = user_time_theta
-    alpha2 = 2 * cluster_time_k
+    k2 = 2 * cluster_time_k
     theta2 = cluster_time_theta
 
-    # Функция распределения (CDF) гамма-распределения
-    def F_gamma(x, alpha, theta):
-        # gammainc - регулярзированная нижняя неполная гамма-функция
-        return gammainc(alpha, x / theta)
+    # плотность гамма-распределения
+    def user_to_coordinator_pdf(t):
+        return gamma_dist.pdf(t, a=k1, scale=theta1)
 
-    # Плотность гамма-распределения (можно через scipy.stats)
-    def f_T1(t):
-        return gamma_dist.pdf(t, a=alpha1, scale=theta1)
-
-    # CDF максимума N величин
-    def F_max(x):
-        # если x <= 0, CDF = 0
+    # максимум гамма-распределений
+    def coordinator_to_executors_max_cdf(x):
         if x <= 0:
             return 0.0
-        return F_gamma(x, alpha2, theta2) ** replicaset_count
+        return gammainc(k2, x / theta2) ** replicaset_count
 
-    # 3. Подынтегральное выражение для первого слагаемого
-    def integrand(t):
-        # f_T1(t) * (1 - F_max(tau - t))
-        return f_T1(t) * (1.0 - F_max(tau - t))
+    # первое слагаемое
+    def integrand(t: float):
+        return user_to_coordinator_pdf(t) * (
+            1.0 - coordinator_to_executors_max_cdf(tau - t)
+        )
 
-    # Интегрирование от 0 до tau
-    integral_part, _ = quad(integrand, 0, tau, limit=200, epsabs=1e-12, epsrel=1e-12)
+    # интегрирование от 0 до tau
+    integral_part, _ = scipy.integrate.quad(
+        integrand, 0, tau, limit=200, epsabs=1e-12, epsrel=1e-12
+    )
 
-    # 4. Второе слагаемое: P(T1 > tau) = 1 - F_T1(tau) = gammaincc(alpha1, tau/theta1)
-    tail_part = gammaincc(alpha1, tau / theta1)
+    # второе слагаемое
+    tail_part = gammaincc(k1, tau / theta1)
 
-    prob = integral_part + tail_part
+    return integral_part + tail_part
 
-    # На всякий случай обрежем до [0,1]
-    return max(0.0, min(1.0, prob))
+
+def prob_timeout_search_GSI(
+    timeout,
+    user_time_k,
+    user_time_theta,
+    cluster_time_k,
+    cluster_time_theta,
+    # параметры детерминированной части
+    deterministic_tus,
+    replicaset_count_with_fk,
+) -> float:
+    """
+    Вычисляет P(#time_user_search_GSI >= #timeout).
+    """
+    # детерминированная часть
+    tau = timeout - deterministic_tus
+
+    if tau <= 0:
+        return 1.0
+
+    k1 = 2 * user_time_k
+    theta1 = user_time_theta
+
+    k2 = 2 * cluster_time_k
+    theta2 = cluster_time_theta
+
+    # гамма-распределения времени между пользователем и координатором
+    def user_to_coordinator_pdf(t):
+        return gamma_dist.pdf(t, a=k1, scale=theta1)
+
+    # гамма-распределения между координатором и исполнителем со вторичным ключом
+    def coordinator_to_fk_executor_pdf(t):
+        return gamma_dist.pdf(t, a=k2, scale=theta2)
+
+    # гамма-распределения между пользователем и исполнителем со вторичным ключом
+    def user_to_fk_executor_pdf(t):
+        if t <= 0:
+            return 0.0
+        val, _ = scipy.integrate.quad(
+            lambda s: (
+                user_to_coordinator_pdf(s) * coordinator_to_fk_executor_pdf(t - s)
+            ),
+            0,
+            t,
+            limit=1000,
+            epsabs=1e-10,
+            epsrel=1e-10,
+        )
+        return val
+
+    def user_to_fk_executor_cdf(t):
+        if t <= 0:
+            return 0.0
+        val, _ = scipy.integrate.quad(
+            user_to_fk_executor_pdf,
+            0,
+            t,
+            limit=1000,
+            epsabs=1e-10,
+            epsrel=1e-10,
+        )
+        return val
+
+    # максимум гамма-распределений
+    def fk_executor_to_executors_max_pdf(x):
+        if x <= 0:
+            return 0.0
+        return gammainc(k2, x / theta2) ** replicaset_count_with_fk
+
+    # первое слагаемое
+    def integrand(t: float):
+        return user_to_fk_executor_pdf(t) * (
+            1.0 - fk_executor_to_executors_max_pdf(tau - t)
+        )
+
+    # интегрирование от 0 до tau
+    integral_part, _ = scipy.integrate.quad(
+        integrand, 0, tau, limit=200, epsabs=1e-12, epsrel=1e-12
+    )
+
+    # второе слагаемое
+    tail_part = 1 - user_to_fk_executor_cdf(tau)
+
+    return integral_part + tail_part

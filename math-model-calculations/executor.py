@@ -1,11 +1,55 @@
 """
-All executor-related calculations are present in here
+All executor-related calculations
 """
 
 import btree
 
 
 def time_execute_search_LSI(
+    data_cardinality_per_replicaset: int,
+    btree_order: int,
+    pk_per_fk_cardinality_per_replicaset: int,
+    cpu_frequency: float,
+    mem_frequency: float,
+) -> float:
+    return (
+        btree.find_keys_by_fk_in_index_comparison_count(
+            data_cardinality_per_replicaset, btree_order
+        )
+        / cpu_frequency
+        + btree.find_keys_by_fk_in_index_memory_jumps_count(
+            data_cardinality_per_replicaset,
+            btree_order,
+            pk_per_fk_cardinality_per_replicaset,
+        )
+        / mem_frequency
+    )
+
+
+def time_execute_search_GSI(
+    data_cardinality_per_replicaset: int,
+    btree_order: int,
+    pk_per_fk_cardinality_per_replicaset: int,
+    cpu_frequency: float,
+    mem_frequency: float,
+) -> float:
+    return (
+        btree.find_keys_by_pk_in_index_comparison_count(
+            data_cardinality_per_replicaset,
+            btree_order,
+            pk_per_fk_cardinality_per_replicaset,
+        )
+        / cpu_frequency
+        + btree.find_keys_by_pk_in_index_memory_jumps_count(
+            data_cardinality_per_replicaset,
+            btree_order,
+            pk_per_fk_cardinality_per_replicaset,
+        )
+        / mem_frequency
+    )
+
+
+def time_execute_fk_subsearch_GSI(
     data_cardinality_per_replicaset: int,
     btree_order: int,
     pk_per_fk_cardinality_per_replicaset: int,
