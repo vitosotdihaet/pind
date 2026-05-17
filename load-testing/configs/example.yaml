@@ -4,3 +4,5 @@ intensity_insert_LSI: 100000
 intensity_search_GSI: 200000
 intensity_insert_GSI: 100000
 row_size: 16
+data_cardinality: 1000
+fk_cardinality: 100

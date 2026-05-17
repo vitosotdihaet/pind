@@ -45,6 +45,30 @@ INSERT_ENDPOINT = ""
 REQUESTS_PER_SECOND = ""
 ROW_SIZE = ""
 
+PK_SK_POOL: list[tuple[str, str]] = []
+FK_POOL: list[str] = []
+
+
+def generate_key_pools(row_size: int, data_cardinality: int, fk_cardinality: int):
+    """Pre-generate fixed pools of keys to respect cardinality constraints."""
+    global PK_SK_POOL, FK_POOL
+    rng = random.Random(42)
+    PK_SK_POOL = [
+        (
+            "".join(rng.choices(string.ascii_letters + string.digits, k=row_size)),
+            "".join(rng.choices(string.ascii_letters + string.digits, k=row_size)),
+        )
+        for _ in range(data_cardinality)
+    ]
+    FK_POOL = [
+        "".join(rng.choices(string.ascii_letters + string.digits, k=row_size))
+        for _ in range(fk_cardinality)
+    ]
+    print(
+        f"Generated {len(PK_SK_POOL)} pk/sk pairs and {len(FK_POOL)} fk values "
+        f"(row_size={row_size} bytes)"
+    )
+
 
 _response_times: dict[str, list[float]] = defaultdict(list)
 _response_times_lock = Lock()
@@ -202,13 +226,7 @@ def fetch_hosts(psql_address: str, admin_password: str) -> list[str]:
 
 @events.init.add_listener
 def on_locust_init(environment, **kwargs):
-    global \
-        CONFIG, \
-        SEARCH_ENDPOINT, \
-        INSERT_ENDPOINT, \
-        REQUESTS_PER_SECOND, \
-        ROW_SIZE, \
-        target_host
+    global CONFIG, SEARCH_ENDPOINT, INSERT_ENDPOINT, REQUESTS_PER_SECOND, ROW_SIZE
 
     CONFIG = config.load_config(path=environment.parsed_options.config_path)
 
@@ -220,6 +238,12 @@ def on_locust_init(environment, **kwargs):
     INSERT_ENDPOINT = f"/insert_{index_type}"
     REQUESTS_PER_SECOND = getattr(CONFIG, intensity_key)
     ROW_SIZE = CONFIG.row_size
+
+    generate_key_pools(
+        row_size=ROW_SIZE,
+        data_cardinality=CONFIG.data_cardinality,
+        fk_cardinality=CONFIG.fk_cardinality,
+    )
 
     hosts = fetch_hosts(
         psql_address=environment.parsed_options.psql_address,
@@ -246,22 +270,16 @@ def on_locust_init(environment, **kwargs):
     print(f"Target rate: {REQUESTS_PER_SECOND} req/s, key size: {ROW_SIZE} bytes")
 
 
-def random_key(size_bytes: int) -> str:
-    """Return a random string of exactly `size_bytes` ASCII letters."""
-    return "".join(random.choices(string.ascii_letters + string.digits, k=size_bytes))
-
-
 def search_task(user: HttpUser):
-    payload = {"fk": random_key(ROW_SIZE)}  # pyright: ignore[reportArgumentType]
+    fk = random.choice(FK_POOL)
+    payload = {"fk": fk}
     user.client.post(SEARCH_ENDPOINT, json=payload)
 
 
 def insert_task(user: HttpUser):
-    payload = {
-        "pk": random_key(ROW_SIZE),  # pyright: ignore[reportArgumentType]
-        "fk": random_key(ROW_SIZE),  # pyright: ignore[reportArgumentType]
-        "sk": random_key(ROW_SIZE),  # pyright: ignore[reportArgumentType]
-    }
+    pk, sk = random.choice(PK_SK_POOL)
+    fk = random.choice(FK_POOL)
+    payload = {"pk": pk, "fk": fk, "sk": sk}
     user.client.post(INSERT_ENDPOINT, json=payload)
 
 

@@ -14,6 +14,9 @@ class LoadTestingConfig(BaseModel):
     intensity_insert_GSI: PositiveFloat
     # bytes
     row_size: PositiveInt
+    # cardinality
+    data_cardinality: PositiveInt
+    fk_cardinality: PositiveInt
 
     @staticmethod
     def default() -> "LoadTestingConfig":
@@ -23,6 +26,8 @@ class LoadTestingConfig(BaseModel):
             intensity_search_GSI=1,
             intensity_insert_GSI=1,
             row_size=1,
+            data_cardinality=1,
+            fk_cardinality=1,
         )
 
 
