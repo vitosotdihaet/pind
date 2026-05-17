@@ -2,6 +2,7 @@ import random
 import string
 
 import config
+import psycopg
 from locust import HttpUser, events
 
 
@@ -20,10 +21,12 @@ def _(parser):
         help="search or insert",
     )
     parser.add_argument(
-        "--hosts",
-        nargs="+",
+        "--admin-password", required=True, help="Admin password of Picodata"
+    )
+    parser.add_argument(
+        "--psql-address",
         required=True,
-        help="list of target hosts, e.g. --hosts http://n1:8080 http://n2:8080",
+        help="psql address of Picodata",
     )
 
 
@@ -33,6 +36,27 @@ INSERT_ENDPOINT = ""
 REQUESTS_PER_SECOND = ""
 ROW_SIZE = ""
 target_host = ""
+
+
+def fetch_hosts(psql_address: str, admin_password: str) -> list[str]:
+    """Fetch HTTP addresses of all cluster nodes from _pico_peer_address."""
+    host, port = psql_address.rsplit(":", 1)
+
+    with psycopg.connect(
+        host=host,
+        port=int(port),
+        user="admin",
+        password=admin_password,
+        dbname="postgres",
+        sslmode="disable",
+    ) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT address FROM _pico_peer_address WHERE connection_type = 'http'"
+            )
+            rows = cur.fetchall()
+
+    return [f"http://{row[0]}" for row in rows]
 
 
 @events.init.add_listener
@@ -56,7 +80,13 @@ def on_locust_init(environment, **kwargs):
     REQUESTS_PER_SECOND = getattr(CONFIG, intensity_key)
     ROW_SIZE = CONFIG.row_size
 
-    hosts = environment.parsed_options.hosts
+    hosts = fetch_hosts(
+        psql_address=environment.parsed_options.psql_address,
+        admin_password=environment.parsed_options.admin_password,
+    )
+    if not hosts:
+        raise RuntimeError("No HTTP peer addresses found in _pico_peer_address")
+
     if environment.runner:
         worker_index = getattr(environment.runner, "worker_index", 0)
         if worker_index is None or worker_index < 0:

@@ -9,7 +9,7 @@ units flags="":
     bash -c 'set -o pipefail; cargo test {{ flags }}'
 
 _run_storage:
-    just pind release
+    just pind release && just pico::set_admin_pass
 
 integrations start_storage="true": (main::_check_arg start_storage "true" "false")
     error("not implemented")
@@ -28,6 +28,6 @@ load index_type operation start_storage="true": (main::_check_arg start_storage 
         --users 1600 \
         --run-time 300s \
         --processes 16 \
-        --hosts http://127.0.0.1:8001 http://127.0.0.1:8002 http://127.0.0.1:8003 http://127.0.0.1:8004 http://127.0.0.1:8005
-    # TODO: use python driver to get all hostnames
+        --admin-password {{ env("ADMIN_PASSWORD") }} \
+        --psql-address 127.0.0.1:5433
     # TODO: use config files for locust
