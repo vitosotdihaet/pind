@@ -14,7 +14,7 @@ _run_storage:
 integrations start_storage="true": (main::_check_arg start_storage "true" "false")
     error("not implemented")
 
-load index_type operation start_storage="true": (main::_check_arg start_storage "true" "false")
+load index_type operation config users start_storage="true": (main::_check_arg start_storage "true" "false")
     #!/usr/bin/env bash
     if [ "{{ start_storage }}" == "true" ]; then
         just test::_run_storage
@@ -23,11 +23,11 @@ load index_type operation start_storage="true": (main::_check_arg start_storage 
         --spawn-rate 10 \
         --autostart \
         --autoquit 0 \
-        --html load-testing/results/report.html \
-        --users 160 \
+        --html load-testing/results/report_{{ operation }}_{{ index_type }}.html \
+        --users {{ users }} \
         --run-time 120s \
         --processes 16 \
-        --config-path load-testing/configs/example.yaml \
+        --config-path {{ config }} \
         --operation {{ operation }} \
         --index-type {{ index_type }} \
         --admin-password {{ env("ADMIN_PASSWORD") }} \

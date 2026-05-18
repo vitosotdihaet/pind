@@ -45,6 +45,44 @@ INSERT_ENDPOINT = ""
 REQUESTS_PER_SECOND = ""
 ROW_SIZE = ""
 
+PREFILL_RATIO = 0.8
+
+
+def prefill_database(
+    host: str,
+    insert_endpoint: str,
+    pk_sk_pool: list[tuple[str, str]],
+    fk_pool: list[str],
+    ratio: float,
+):
+    """Insert `ratio` fraction of the pk/sk pool into the DB via HTTP."""
+    import requests
+
+    n = int(len(pk_sk_pool) * ratio)
+    if n <= 0:
+        return
+
+    url = f"{host}{insert_endpoint}"
+    print(f"Prefilling {n}/{len(pk_sk_pool)} rows into {url} ...")
+
+    session = requests.Session()
+    sample = random.sample(pk_sk_pool, n)
+
+    failures = 0
+    for i, (pk, sk) in enumerate(sample, 1):
+        fk = random.choice(fk_pool)
+        try:
+            resp = session.post(url, json={"pk": pk, "fk": fk, "sk": sk}, timeout=10)
+            if resp.status_code >= 400:
+                failures += 1
+        except Exception:
+            failures += 1
+        if i % 1000 == 0:
+            print(f"  prefilled {i}/{n} (failures: {failures})")
+
+    print(f"Prefill complete: {n - failures}/{n} succeeded, {failures} failures")
+
+
 PK_SK_POOL: list[tuple[str, str]] = []
 FK_POOL: list[str] = []
 
@@ -98,10 +136,10 @@ def _save_histogram(name: str, times: list[float], out_dir: str):
     arr = np.array(times, dtype=float)
 
     # use a sensible upper bound (clip at p99.9 so a few outliers don't squash the plot)
-    upper = np.percentile(arr, 99.999)
+    upper = np.percentile(arr, 99.9)
     clipped = arr[arr <= upper]
 
-    # freedman–Diaconis rule for bin width; fall back to 50 bins
+    # Freedman–Diaconis rule for bin width; fall back to 50 bins
     if len(clipped) > 1:
         iqr = np.subtract(*np.percentile(clipped, [75, 25]))
         bin_width = 2 * iqr / (len(clipped) ** (1 / 3)) if iqr > 0 else 0
@@ -252,10 +290,22 @@ def on_locust_init(environment, **kwargs):
     if not hosts:
         raise RuntimeError("No HTTP peer addresses found in _pico_peer_address")
 
-    if environment.runner:
-        worker_index = getattr(environment.runner, "worker_index", 0)
-        if worker_index is None or worker_index < 0:
-            worker_index = 0
+    runner = environment.runner
+    is_worker = isinstance(runner, WorkerRunner)
+    is_master_or_standalone = not is_worker  # MasterRunner or LocalRunner
+
+    # Prefill DB only once from master only for search tests
+    if op_type == "search" and is_master_or_standalone:
+        prefill_database(
+            host=hosts[0],
+            insert_endpoint=INSERT_ENDPOINT,
+            pk_sk_pool=PK_SK_POOL,
+            fk_pool=FK_POOL,
+            ratio=PREFILL_RATIO,
+        )
+
+    if is_worker:
+        worker_index = getattr(runner, "worker_index", 0) or 0
     else:
         worker_index = 0
 
