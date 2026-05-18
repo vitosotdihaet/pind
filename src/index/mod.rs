@@ -1,27 +1,26 @@
-use picodata_plugin::sql::{self, query_raw, types::SqlValue};
+use picodata_plugin::sql;
 use serde::{Deserialize, Serialize};
-use shors::tarantool::msgpack::Decode;
 
-#[derive(Debug, Serialize, Deserialize, Hash)]
-pub struct IndexIdentifier {
-    table_name: String,
-    column_names: Vec<String>,
-    primary_key_column_names: Vec<String>,
-}
+// #[derive(Debug, Serialize, Deserialize, Hash)]
+// pub struct IndexIdentifier {
+//     table_name: String,
+//     column_names: Vec<String>,
+//     primary_key_column_names: Vec<String>,
+// }
 
-impl IndexIdentifier {
-    pub fn new(
-        table_name: String,
-        column_names: Vec<String>,
-        primary_key_column_names: Vec<String>,
-    ) -> IndexIdentifier {
-        IndexIdentifier {
-            table_name,
-            column_names,
-            primary_key_column_names,
-        }
-    }
-}
+// impl IndexIdentifier {
+//     pub fn new(
+//         table_name: String,
+//         column_names: Vec<String>,
+//         primary_key_column_names: Vec<String>,
+//     ) -> IndexIdentifier {
+//         IndexIdentifier {
+//             table_name,
+//             column_names,
+//             primary_key_column_names,
+//         }
+//     }
+// }
 
 const TABLE_NAME: &'static str = "test_table";
 const GSI_NAME: &'static str = "test_table_gsi";

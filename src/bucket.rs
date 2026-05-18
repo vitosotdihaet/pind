@@ -95,7 +95,7 @@ pub(crate) fn calculate_bucket_id(tuple: &[&Value], bucket_count: u64) -> Bucket
             log::error!("failed to create keydef of a tuple {tuple:?}: {e}");
         })
         .unwrap();
-    (u64::from(key.hash(&tnt_tuple)) % bucket_count + 1)
+    u64::from(key.hash(&tnt_tuple)) % bucket_count + 1
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
