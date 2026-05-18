@@ -1983,41 +1983,43 @@ $
 // ==== Представление данных
 
 = Сравнение полученных результатов с математическими моделями
-На рисунке @time_user_search_LSI_pdf представлен график плотности вероятности времени ожидания ответа от СУБД при поиске в ЛВИ при следующих входных параметров модели:
-#figure(
-  [```yaml
-  intensity_search_LSI: 10000
-  replicaset_count: 15
-  cluster_time_k: 1.5
-  cluster_time_theta: 0.02
-  cluster_net_speed: 4096
-  user_time_k: 1.5
-  user_time_theta: 0.1
-  user_net_speed: 1000000
-  row_size: 128
-  data_cardinality: 1000
-  fk_cardinality: 100
-  cpu_frequency: 10000000
-  mem_frequency: 10000000
-  wal_time: 0.002
-  timeout: 2
-  btree_order: 3
-  ```],
-  caption: [Параметры тестовой математической модели],
-)
+На рисунке @time_user_search_LSI_medium представлена гистограмма распределения времени ожидания пользователя ответа от СУБД при поиске в ЛВИ при следующих параметрах кластера:
+- $#intensity_search_LSI = 509.13$, $#replicaset_count= 8$,
+- $#cluster_time_k= 1.5$, $#cluster_time_theta= 0.01$, $#cluster_net_speed= 10 dot 2^(20)$,
+- $#user_time_k= 1.5$, $#user_time_theta= 0.01$, $#user_net_speed= 10 dot 2^(20)$,
+- $#row_size= 128$, $#data_cardinality= 100000$, $#fk_cardinality= 100000$,
+- $#cpu_frequency= 4 dot 2^(30)$, $#mem_frequency= 5 dot 2^(30)$,
+- $#wal_time= 0.002$,
+- $#timeout= 10$,
+- $#btree_order= 4096$.
 
 #figure(
-  image("assets/time_user_search_LSI_pdf.png", width: 80%),
-  caption: [Плотность вероятности времени ожидания ответа от СУБД при поиске в ЛВИ],
-) <time_user_search_LSI_pdf>
+  image("assets/time_user_search_LSI_medium.png", width: 80%),
+  caption: [Гистограмма распределения времени ожидания пользователя ответа от СУБД при поиске в ЛВИ],
+) <time_user_search_LSI_medium>
 
-Показатели эффективности модели с данными параметрами равны:
-$ #max_subintensity_search_LSI approx 714285 $
-$ M[#time_user_search_LSI] approx 0.42 $
-$ #queue_time_total_search_LSI approx 0.000001 $
-$ P(#time_user_search_LSI >= #timeout) approx 0.0000004 $
+На рисунке @time_user_search_LSI_medium_model представлена плотность вероятности превышения времени ожидания ответа от СУБД при поиске в ЛВИ, согласно математической модели с теми же параметрами.
 
-// == Выводы
+#figure(
+  image("assets/time_user_search_LSI_medium_model.png", width: 80%),
+  caption: [Плотность вероятности превышения времени ожидания ответа от СУБД при поиске в ЛВИ],
+) <time_user_search_LSI_medium_model>
+
+Результаты близки, но все же различаются. Предположительно это произошло из-за неучитывания некоторых процессов, происходящих внутри СУБД Picodata, например, поддержание согласованности кластера.
+
+При тех же параметрах кластера, глобальный вторичный индекс показал себя лучше. На рисунке @time_user_search_GSI_medium представлена гистограмма распределения времени ожидания пользователя ответа от СУБД при поиске в ГВИ. На рисунке @time_user_search_GSI_medium_model представлена плотность вероятности превышения времени ожидания ответа от СУБД при поиске в ГВИ.
+
+#figure(
+  image("assets/time_user_search_GSI_medium.png", width: 80%),
+  caption: [Гистограмма распределения времени ожидания пользователя ответа от СУБД при поиске в ГВИ],
+) <time_user_search_GSI_medium>
+
+#figure(
+  image("assets/time_user_search_GSI_medium_model.png", width: 80%),
+  caption: [Плотность вероятности превышения времени ожидания ответа от СУБД при поиске в ГВИ],
+) <time_user_search_GSI_medium_model>
+
+Разница в показателях эффективности модели и тестового кластера также обуславливается процессами, не учитывающимися в модели.
 
 
 = Заключение
