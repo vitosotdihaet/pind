@@ -1,0 +1,8 @@
+intensity_search_LSI: 200000
+# TODO: change to update
+intensity_insert_LSI: 100000
+intensity_search_GSI: 200000
+intensity_insert_GSI: 100000
+row_size: 16
+data_cardinality: 10000
+fk_cardinality: 10000
