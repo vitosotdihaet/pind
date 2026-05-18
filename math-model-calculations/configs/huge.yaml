@@ -1,0 +1,32 @@
+# intensities (requests/second)
+intensity_search_LSI: 1000000
+intensity_search_GSI: 1000000
+intensity_update_LSI: 1000000
+intensity_update_GSI: 1000000
+replicaset_count: 1000
+
+# node to node latency gamma-distribution parameters
+cluster_time_k: 1.0
+cluster_time_theta: 0.5
+cluster_net_speed: 100000000
+
+# user to node latency gamma-distribution parameters
+user_time_k: 1.0
+user_time_theta: 0.15
+user_net_speed: 100000000
+
+# bytes
+row_size: 128
+# int
+data_cardinality: 100000000000
+fk_cardinality: 10000000000
+
+cpu_frequency: 4000000000
+mem_frequency: 100000000
+# in seconds
+wal_time: 0.002
+timeout: 5
+
+# btree
+btree_order: 4096
+
