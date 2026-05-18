@@ -11,7 +11,7 @@ matplotlib.use("Agg")  # headless backend
 import config
 import matplotlib.pyplot as plt
 import psycopg
-from locust import HttpUser, events
+from locust import HttpUser, events, task
 from locust.runners import MasterRunner, WorkerRunner
 
 
@@ -44,6 +44,7 @@ SEARCH_ENDPOINT = ""
 INSERT_ENDPOINT = ""
 REQUESTS_PER_SECOND = ""
 ROW_SIZE = ""
+OPERATION = ""
 
 PREFILL_RATIO = 0.8
 
@@ -135,8 +136,8 @@ def _save_histogram(name: str, times: list[float], out_dir: str):
 
     arr = np.array(times, dtype=float)
 
-    # use a sensible upper bound (clip at p99.9 so a few outliers don't squash the plot)
-    upper = np.percentile(arr, 99.9)
+    # use a sensible upper bound (clip at p99 so a few outliers don't squash the plot)
+    upper = np.percentile(arr, 99)
     clipped = arr[arr <= upper]
 
     # Freedman–Diaconis rule for bin width; fall back to 50 bins
@@ -264,13 +265,19 @@ def fetch_hosts(psql_address: str, admin_password: str) -> list[str]:
 
 @events.init.add_listener
 def on_locust_init(environment, **kwargs):
-    global CONFIG, SEARCH_ENDPOINT, INSERT_ENDPOINT, REQUESTS_PER_SECOND, ROW_SIZE
+    global \
+        CONFIG, \
+        SEARCH_ENDPOINT, \
+        INSERT_ENDPOINT, \
+        REQUESTS_PER_SECOND, \
+        ROW_SIZE, \
+        OPERATION
 
     CONFIG = config.load_config(path=environment.parsed_options.config_path)
 
+    OPERATION = environment.parsed_options.operation
     index_type = environment.parsed_options.index_type
-    op_type = environment.parsed_options.operation
-    intensity_key = f"intensity_{op_type}_{index_type.upper()}"
+    intensity_key = f"intensity_{OPERATION}_{index_type.upper()}"
 
     SEARCH_ENDPOINT = f"/search_{index_type}"
     INSERT_ENDPOINT = f"/insert_{index_type}"
@@ -295,7 +302,7 @@ def on_locust_init(environment, **kwargs):
     is_master_or_standalone = not is_worker  # MasterRunner or LocalRunner
 
     # Prefill DB only once from master only for search tests
-    if op_type == "search" and is_master_or_standalone:
+    if OPERATION == "search" and is_master_or_standalone:
         prefill_database(
             host=hosts[0],
             insert_endpoint=INSERT_ENDPOINT,
@@ -309,15 +316,16 @@ def on_locust_init(environment, **kwargs):
     else:
         worker_index = 0
 
-    if op_type == "search":
+    if OPERATION == "search":
         LoadUser.tasks = [search_task]
     else:
         LoadUser.tasks = [insert_task]
 
     target_host = hosts[worker_index % len(hosts)]
     LoadUser.host = target_host
+    environment.host = target_host
     print(f"Worker {worker_index} will target {target_host}")
-    print(f"Target rate: {REQUESTS_PER_SECOND} req/s, key size: {ROW_SIZE} bytes")
+    # print(f"Target rate: {REQUESTS_PER_SECOND} req/s, key size: {ROW_SIZE} bytes")
 
 
 def search_task(user: HttpUser):
@@ -334,4 +342,16 @@ def insert_task(user: HttpUser):
 
 
 class LoadUser(HttpUser):
-    host = ""
+    host = None
+
+    def on_start(self):
+        if not self.host:
+            self.host = self.environment.host
+
+    @task
+    def run_op(self):
+        global OPERATION
+        if OPERATION == "search":
+            search_task(self)
+        else:
+            insert_task(self)
