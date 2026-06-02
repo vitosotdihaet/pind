@@ -29,7 +29,7 @@ load config:
         sleep 5; \
         for index in "lsi" "gsi"; do \
             locust -f load-testing/locustfile.py \
-                --spawn-rate 1 \
+                --spawn-rate 4 \
                 --autostart \
                 --autoquit 0 \
                 --users 100 \
