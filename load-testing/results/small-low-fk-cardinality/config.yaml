@@ -8,12 +8,12 @@ intensity_insert_LSI: 100000
 intensity_search_GSI: 100000
 intensity_insert_GSI: 100000
 
-cluster_time_k: 1.5
-cluster_time_theta: 0.02
+cluster_time_k: 1
+cluster_time_theta: 0.005
 cluster_net_speed: 10000000
 
-user_time_k: 2
-user_time_theta: 0.02
+user_time_k: 1
+user_time_theta: 0.005
 user_net_speed: 10000000
 
 cpu_frequency: 4000000000
