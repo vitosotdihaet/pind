@@ -2,6 +2,7 @@
 #import "math-stuff.typ": *
 
 #set enum(numbering: "1)")
+#set text(font: "Times New Roman")
 
 #show: gost.with(
   ministry: [МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ],
