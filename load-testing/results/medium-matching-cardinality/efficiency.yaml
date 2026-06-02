@@ -1,0 +1,23 @@
+# LSI SEARCH
+time_execute_search_LSI: 0.0000002032
+load_executor_search_LSI: 0.0203250000
+service_time_execute_search_LSI: 0.0000002054
+queue_time_execute_search_LSI: 0.0000000021
+
+max_subintensity_search_LSI: 4920049.2004920049
+time_user_search_LSI_mean: 0.0323501714
+queue_time_total_search_LSI: 0.0000000042
+prob_timeout_search_LSI: 0.0000000000
+
+# GSI SEARCH
+time_execute_search_GSI: 0.0000001033
+time_execute_fk_subsearch_GSI: 0.0000002032
+load_executor_search_GSI: 0.0038312500
+service_time_execute_search_GSI: 0.0000003071
+queue_time_execute_search_GSI: 0.0000002038
+
+max_subintensity_search_GSI: 3262642.7406199020
+time_user_search_GSI_mean: 0.0259965611
+queue_time_total_search_GSI: 0.0000006115
+prob_timeout_search_GSI: 0.0000000000
+
