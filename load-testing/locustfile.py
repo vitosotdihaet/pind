@@ -2,6 +2,7 @@ import os
 import random
 import string
 from collections import defaultdict
+from pathlib import Path
 from threading import Lock
 
 import matplotlib
@@ -109,38 +110,38 @@ def generate_key_pools(row_size: int, data_cardinality: int, fk_cardinality: int
     )
 
 
-_response_times: dict[str, list[float]] = defaultdict(list)
-_response_times_lock = Lock()
+RESPONSE_TIMES: dict[str, list[float]] = defaultdict(list)
+RESPONSE_TIMES_LOCK = Lock()
 
 
 @events.request.add_listener
 def on_request(
-    request_type,
+    request_type,  # pyright: ignore[reportUnusedParameter]
     name,
     response_time,
-    response_length,
+    response_length,  # pyright: ignore[reportUnusedParameter]
     exception,
-    context,
-    **kwargs,
+    context,  # pyright: ignore[reportUnusedParameter]
+    **kwargs,  # pyright: ignore[reportUnusedParameter]
 ):
-    # skip failed requests if you only want successful latencies
+    # don't save failed requests
     if exception is not None:
         return
-    with _response_times_lock:
-        _response_times[name].append(response_time)
+    with RESPONSE_TIMES_LOCK:
+        RESPONSE_TIMES[name].append(response_time)
 
 
-def _save_histogram(name: str, times: list[float], out_dir: str):
+def save_histogram(name: str, times: list[float], out_dir: Path):
     if not times:
         return
 
     arr = np.array(times, dtype=float)
 
-    # use a sensible upper bound (clip at p99 so a few outliers don't squash the plot)
-    upper = np.percentile(arr, 99)
+    # clip at p99.1 so a few outliers don't squash the plot
+    upper = np.percentile(arr, 99.1)
     clipped = arr[arr <= upper]
 
-    # Freedman–Diaconis rule for bin width; fall back to 50 bins
+    # Freedman–Diaconis rule for bin width
     if len(clipped) > 1:
         iqr = np.subtract(*np.percentile(clipped, [75, 25]))
         bin_width = 2 * iqr / (len(clipped) ** (1 / 3)) if iqr > 0 else 0
@@ -153,50 +154,100 @@ def _save_histogram(name: str, times: list[float], out_dir: str):
     else:
         bins = 20
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    counts, edges, _ = ax.hist(clipped, bins=bins, edgecolor="black", alpha=0.75)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    counts, edges, _ = ax.hist(
+        clipped, bins=bins, edgecolor="blue", color="#FFFFFF00", alpha=0.5
+    )
 
     # annotate key percentiles
-    for pct, color in [(50, "green"), (95, "orange"), (99, "red")]:
+    for pct, color in [(50, "#65743A"), (95, "#DFAD4D"), (99, "#DBDA55")]:
         val = np.percentile(arr, pct)
         ax.axvline(
             val,
             color=color,
             linestyle="--",
-            linewidth=1.2,
-            label=f"p{pct} = {val:.1f} ms",
+            linewidth=1,
+            label=f"p{pct} = {val:.1f} мс",
         )
 
+    graph_name = "unknown"
+    match name:
+        case "/search_gsi":
+            graph_name = "поиске в ГВИ"
+        case "/search_lsi":
+            graph_name = "поиске в ЛВИ"
+        case "/insert_gsi":
+            graph_name = "обновлении ГВИ"
+        case "/insert_lsi":
+            graph_name = "обновлении ЛВИ"
+
     ax.set_title(
-        f"Response time histogram — {name}\n"
-        f"n={len(arr)}, mean={arr.mean():.1f} ms, "
-        f"min={arr.min():.1f}, max={arr.max():.1f}"
+        f"Распределение времени ожидания ответа БД при {graph_name}\n"
+        f"Всего запросов: {len(arr)}, мин={arr.min():.1f} мс, макс={arr.max():.1f} мс"
     )
-    ax.set_xlabel("Response time (ms)")
-    ax.set_ylabel("Count")
+
+    ax.axvline(
+        arr.mean(),
+        color="r",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"Медиана = {arr.mean():.1f} мс",
+    )
+
+    std_val = arr.std()
+    mean_val = arr.mean()
+    if mean_val - std_val >= 0:
+        ax.axvline(
+            mean_val - std_val,
+            color="green",
+            linestyle=":",
+            linewidth=1.5,
+        )
+    ax.axvline(
+        mean_val + std_val,
+        color="green",
+        linestyle=":",
+        linewidth=1.5,
+        label=f"±1σ, где σ  = {std_val:.1f} мс",
+    )
+
+    x_step = np.repeat(edges, 2)[1:-1]
+    y_step = np.repeat(counts, 2)
+
+    ax.fill_between(
+        x_step,
+        0,
+        y_step,
+        where=((x_step >= mean_val - std_val) & (x_step <= mean_val + std_val)),
+        color="green",
+        alpha=0.25,
+        step="mid",
+    )
+
+    ax.set_xlabel("Время, мс")
+    ax.set_ylabel("Количество запросов")
     ax.legend()
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
 
-    safe_name = name.strip("/").replace("/", "_") or "root"
+    safe_name = name.strip("/")
     png_path = os.path.join(out_dir, f"hist_{safe_name}.png")
     csv_path = os.path.join(out_dir, f"hist_{safe_name}.csv")
 
     fig.savefig(png_path, dpi=120)
     plt.close(fig)
 
-    # Also dump raw bin data so you can re-plot later
     with open(csv_path, "w") as f:
         f.write("bin_left_ms,bin_right_ms,count\n")
         for i, c in enumerate(counts):
             f.write(f"{edges[i]:.3f},{edges[i + 1]:.3f},{int(c)}\n")
 
-    print(f"[histogram] saved {png_path} ({len(arr)} samples)")
+    print(f"[histogram] saved to '{png_path}' ({len(arr)} samples)")
 
 
 @events.quitting.add_listener
 def on_quitting(environment, **kwargs):
-    # Only the master (or standalone) should write output to avoid duplicates
+    # only the master (or standalone) should write output to avoid duplicates
     runner = environment.runner
     if (
         runner is not None
@@ -206,14 +257,13 @@ def on_quitting(environment, **kwargs):
     ):
         return
 
-    out_dir = os.environ.get("LOCUST_HIST_DIR", "load-testing/results")
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = Path(environment.parsed_options.config_path).parent.resolve()
 
-    with _response_times_lock:
-        snapshot = {k: list(v) for k, v in _response_times.items()}
+    with RESPONSE_TIMES_LOCK:
+        snapshot = {k: list(v) for k, v in RESPONSE_TIMES.items()}
 
     for name, times in snapshot.items():
-        _save_histogram(name, times, out_dir)
+        save_histogram(name, times, out_dir)
 
 
 @events.init.add_listener
@@ -221,9 +271,9 @@ def setup_messaging(environment, **kwargs):
     if isinstance(environment.runner, MasterRunner):
 
         def on_samples(environment, msg, **_):
-            with _response_times_lock:
+            with RESPONSE_TIMES_LOCK:
                 for name, times in msg.data.items():
-                    _response_times[name].extend(times)
+                    RESPONSE_TIMES[name].extend(times)
 
         environment.runner.register_message("rt_samples", on_samples)
 
@@ -233,9 +283,9 @@ def setup_messaging(environment, **kwargs):
         def report_loop():
             while True:
                 gevent.sleep(5)
-                with _response_times_lock:
-                    payload = {k: v[:] for k, v in _response_times.items()}
-                    _response_times.clear()
+                with RESPONSE_TIMES_LOCK:
+                    payload = {k: v[:] for k, v in RESPONSE_TIMES.items()}
+                    RESPONSE_TIMES.clear()
                 if payload:
                     environment.runner.send_message("rt_samples", payload)
 
