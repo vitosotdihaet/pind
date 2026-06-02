@@ -29,7 +29,7 @@ load config:
         sleep 5; \
         for index in "lsi" "gsi"; do \
             locust -f load-testing/locustfile.py \
-                --spawn-rate 5 \
+                --spawn-rate 1 \
                 --autostart \
                 --autoquit 0 \
                 --users 100 \
@@ -40,6 +40,8 @@ load config:
                 --index-type $index \
                 --html $config_prefix/report_${op}_${index}.html \
                 --admin-password {{ env("ADMIN_PASSWORD") }} \
-                --psql-address 127.0.0.1:5433; \
+                --psql-address 127.0.0.1:5433 || true; \
         done \
     done
+
+    just pico::down

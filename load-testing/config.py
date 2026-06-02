@@ -17,6 +17,8 @@ class LoadTestingConfig(BaseModel):
     # cardinality
     data_cardinality: PositiveInt
     fk_cardinality: PositiveInt
+    # timeout in secs
+    timeout: PositiveFloat
 
     @staticmethod
     def default() -> "LoadTestingConfig":
@@ -28,6 +30,7 @@ class LoadTestingConfig(BaseModel):
             row_size=1,
             data_cardinality=1,
             fk_cardinality=1,
+            timeout=1,
         )
 
 

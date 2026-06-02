@@ -46,6 +46,7 @@ INSERT_ENDPOINT = ""
 REQUESTS_PER_SECOND = ""
 ROW_SIZE = ""
 OPERATION = ""
+TIMEOUT = 0
 
 PREFILL_RATIO = 0.8
 
@@ -321,9 +322,11 @@ def on_locust_init(environment, **kwargs):
         INSERT_ENDPOINT, \
         REQUESTS_PER_SECOND, \
         ROW_SIZE, \
-        OPERATION
+        OPERATION, \
+        TIMEOUT
 
     CONFIG = config.load_config(path=environment.parsed_options.config_path)
+    TIMEOUT = CONFIG.timeout
 
     OPERATION = environment.parsed_options.operation
     index_type = environment.parsed_options.index_type
@@ -381,14 +384,14 @@ def on_locust_init(environment, **kwargs):
 def search_task(user: HttpUser):
     fk = random.choice(FK_POOL)
     payload = {"fk": fk}
-    user.client.post(SEARCH_ENDPOINT, json=payload)
+    user.client.post(SEARCH_ENDPOINT, json=payload, timeout=TIMEOUT)
 
 
 def insert_task(user: HttpUser):
     pk, sk = random.choice(PK_SK_POOL)
     fk = random.choice(FK_POOL)
     payload = {"pk": pk, "fk": fk, "sk": sk}
-    user.client.post(INSERT_ENDPOINT, json=payload)
+    user.client.post(INSERT_ENDPOINT, json=payload, timeout=TIMEOUT)
 
 
 class LoadUser(HttpUser):
