@@ -231,5 +231,7 @@
 
 
 // math model accuracy stuff
-#let MAPE_T_user = $"MAPE"_T$
+#let MAPE_rps = $"MAPE"_"RPS"$
 #let MAPE_timeout = $"MAPE"_"timeout"$
+#let MAPE_T_user = $"MAPE"_T$
+#let MAPE_queue = $"MAPE"_"queue"$
